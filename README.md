@@ -195,6 +195,29 @@ npm run dev
 
 ---
 
+## 🌐 Deploying Live to the Web (Making the Website Public)
+
+### Option 1: 1-Click Free Deployment on Render (Recommended)
+1. Sign up or log into [Render.com](https://render.com).
+2. Click **New +** > **Web Service**.
+3. Connect your GitHub repository: `https://github.com/Pranshu188/CampusMarket`.
+4. Configure:
+   - **Environment:** Node
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+5. Click **Create Web Service**. Render will automatically build the React app and deploy the Express + SQLite backend with a free public `https://campusmarket-xxxx.onrender.com` URL.
+
+### Option 2: Railway.app / Fly.io / VPS
+Simply run:
+```bash
+npm install
+npm run build
+npm start
+```
+The server will bind to the cloud provider's `$PORT` and serve both the API and client application.
+
+---
+
 ## ⚙️ Environment Variables
 
 Create or customize `.env` in the root directory:

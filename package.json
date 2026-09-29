@@ -2,7 +2,7 @@
   "name": "campusmarket",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
     "server": "node server/index.js",
     "client": "npm --prefix client run dev",

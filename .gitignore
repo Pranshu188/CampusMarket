@@ -2,8 +2,6 @@
 node_modules/
 client/node_modules/
 
-# Production build output (can be built with npm run build)
-client/dist/
 
 # Environment files
 .env

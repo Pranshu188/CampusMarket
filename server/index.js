@@ -59,17 +59,19 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve frontend build if exists
+// Serve frontend build
 const clientDist = path.join(__dirname, '../client/dist');
-if (fs.existsSync(clientDist)) {
-  app.use(express.static(clientDist));
-  app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
-      return res.sendFile(path.join(clientDist, 'index.html'));
+app.use(express.static(clientDist));
+
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+    const indexPath = path.join(clientDist, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
     }
-    next();
-  });
-}
+  }
+  next();
+});
 
 // Global error handler
 app.use((err, req, res, next) => {

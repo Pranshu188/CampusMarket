@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Production build output (can be built with npm run build)
+client/dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Database
+server/*.db
+server/*.db-wal
+server/*.db-shm
+
+# Uploads
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

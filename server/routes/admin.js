@@ -262,7 +262,8 @@ router.patch('/users/:id/status', (req, res) => {
 router.get('/orders', (req, res) => {
   try {
     const orders = db.prepare(`
-      SELECT o.*, p.title as product_title, u_buyer.name as buyer_name, u_seller.name as seller_name
+      SELECT o.*, p.title as product_title, u_buyer.name as buyer_name, u_buyer.phone as buyer_phone, u_buyer.email as buyer_email,
+             u_seller.name as seller_name, u_seller.phone as seller_phone, u_seller.email as seller_email
       FROM orders o
       JOIN products p ON o.product_id = p.id
       JOIN users u_buyer ON o.buyer_id = u_buyer.id
@@ -272,6 +273,67 @@ router.get('/orders', (req, res) => {
     res.json({ orders });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch orders.' });
+  }
+});
+
+// Admin release escrow payout to seller
+router.patch('/orders/:id/release-escrow', (req, res) => {
+  try {
+    const id = req.params.id;
+    const order = db.prepare(`
+      SELECT o.*, p.title as product_title, u_seller.name as seller_name 
+      FROM orders o 
+      JOIN products p ON o.product_id = p.id 
+      JOIN users u_seller ON o.seller_id = u_seller.id 
+      WHERE o.id = ?
+    `).get(id);
+
+    if (!order) return res.status(404).json({ error: 'Order not found.' });
+
+    db.prepare("UPDATE orders SET escrow_status = 'released', payment_status = 'paid' WHERE id = ?").run(id);
+
+    db.prepare(`
+      INSERT INTO notifications (user_id, title, message, type, link)
+      VALUES (?, '🎉 Admin Released Escrow Payout', ?, 'order', '/dashboard?tab=orders')
+    `).run(
+      order.seller_id,
+      `CampusMarket Admin has released payout of ₹${order.amount} for "${order.product_title}" (Order: ${order.order_number}). Payment transferred to seller account.`
+    );
+
+    res.json({ message: 'Escrow released and seller notified.', escrow_status: 'released' });
+  } catch (e) {
+    console.error('Release escrow error:', e);
+    res.status(500).json({ error: 'Failed to release escrow funds.' });
+  }
+});
+
+// Admin trigger verify & notify seller with buyer details
+router.patch('/orders/:id/notify-seller', (req, res) => {
+  try {
+    const id = req.params.id;
+    const order = db.prepare(`
+      SELECT o.*, p.title as product_title, u_buyer.name as buyer_name, u_buyer.phone as buyer_phone, u_buyer.email as buyer_email,
+             u_seller.name as seller_name
+      FROM orders o
+      JOIN products p ON o.product_id = p.id
+      JOIN users u_buyer ON o.buyer_id = u_buyer.id
+      JOIN users u_seller ON o.seller_id = u_seller.id
+      WHERE o.id = ?
+    `).get(id);
+
+    if (!order) return res.status(404).json({ error: 'Order not found.' });
+
+    const msg = `CampusMarket Admin: Payment of ₹${order.amount} is verified in Escrow from buyer ${order.buyer_name} (Phone: ${order.buyer_phone || 'In chat'}, Email: ${order.buyer_email}) for "${order.product_title}" (UTR: ${order.utr_number || order.transaction_id}). Please coordinate student handover near "${order.pickup_notes || 'College Campus'}". Once buyer marks received, funds will be transferred to your account!`;
+
+    db.prepare(`
+      INSERT INTO notifications (user_id, title, message, type, link)
+      VALUES (?, 'CampusMarket Escrow: Payment Confirmed by Admin', ?, 'order', '/dashboard?tab=orders')
+    `).run(order.seller_id, msg);
+
+    res.json({ message: 'Verified payment details sent to seller successfully.' });
+  } catch (e) {
+    console.error('Notify seller error:', e);
+    res.status(500).json({ error: 'Failed to notify seller.' });
   }
 });
 

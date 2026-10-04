@@ -254,21 +254,39 @@ function initDatabase() {
     db.exec("ALTER TABLE users ADD COLUMN verification_reason TEXT DEFAULT ''");
   } catch (e) {}
 
-  // Safe migrations for orders & rentals payment tracking
+  // Safe migrations for orders & rentals payment tracking & escrow
   try {
     db.exec("ALTER TABLE orders ADD COLUMN transaction_id TEXT DEFAULT ''");
+  } catch (e) {}
+  try {
+    db.exec("ALTER TABLE orders ADD COLUMN utr_number TEXT DEFAULT ''");
+  } catch (e) {}
+  try {
+    db.exec("ALTER TABLE orders ADD COLUMN escrow_status TEXT DEFAULT 'held'");
   } catch (e) {}
   try {
     db.exec("ALTER TABLE rentals ADD COLUMN transaction_id TEXT DEFAULT ''");
   } catch (e) {}
   try {
-    db.exec("ALTER TABLE rentals ADD COLUMN payment_method TEXT DEFAULT 'UPI / CampusPay'");
+    db.exec("ALTER TABLE rentals ADD COLUMN utr_number TEXT DEFAULT ''");
+  } catch (e) {}
+  try {
+    db.exec("ALTER TABLE rentals ADD COLUMN escrow_status TEXT DEFAULT 'held'");
+  } catch (e) {}
+  try {
+    db.exec("ALTER TABLE rentals ADD COLUMN payment_method TEXT DEFAULT 'CampusMarket UPI QR'");
   } catch (e) {}
 
   // Seed default settings if not exists
   const existingApproval = db.prepare('SELECT value FROM settings WHERE key = ?').get('require_approval');
   if (!existingApproval) {
-    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('require_approval', 'false'); // Default false so demo is immediately accessible, but admin can toggle anytime
+    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('require_approval', 'false');
+  }
+
+  const existingUpi = db.prepare('SELECT value FROM settings WHERE key = ?').get('admin_upi_id');
+  if (!existingUpi) {
+    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('admin_upi_id', 'campusmarket@upi');
+    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('admin_upi_name', 'CampusMarket Escrow Account');
   }
 
   // Seed database if users count is 0

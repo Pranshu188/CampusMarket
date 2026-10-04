@@ -11,8 +11,9 @@ router.post('/', requireAuth, (req, res) => {
       duration_months = 1, 
       start_date, 
       pickup_notes,
-      payment_method = 'UPI / CampusPay',
-      payment_status = 'paid',
+      payment_method = 'CampusMarket UPI QR (Online Escrow)',
+      payment_status,
+      utr_number = '',
       transaction_id = ''
     } = req.body;
 
@@ -45,10 +46,18 @@ router.post('/', requireAuth, (req, res) => {
     endDateObj.setMonth(endDateObj.getMonth() + months);
     const endDateStr = endDateObj.toISOString().split('T')[0];
 
-    const isHandover = payment_status === 'pending_pickup' || payment_method.toLowerCase().includes('handover');
-    const actualPaymentStatus = isHandover ? 'pending_pickup' : 'paid';
-    const actualRentalStatus = isHandover ? 'pending_pickup' : 'active';
-    const actualTxnId = transaction_id || (isHandover ? 'HANDOVER-PENDING' : `pay_cm_rnt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
+    const isCod = payment_method.toLowerCase().includes('cod') || 
+                  payment_method.toLowerCase().includes('handover') || 
+                  payment_status === 'pending_handover' ||
+                  payment_status === 'pending_pickup';
+
+    const cleanUtr = (utr_number || '').trim().replace(/\s+/g, '');
+    const actualPaymentStatus = isCod ? 'pending_handover' : 'escrow_held';
+    const actualEscrowStatus = isCod ? 'cod' : 'held';
+    const actualRentalStatus = isCod ? 'pending_pickup' : 'active';
+    const actualTxnId = isCod 
+      ? 'COD-CAMPUS-HANDOVER' 
+      : (cleanUtr ? `UTR-${cleanUtr}` : (transaction_id || `CM-RNT-ESC-${Date.now()}`));
 
     const rentalNumber = `CM-RNT-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -56,11 +65,11 @@ router.post('/', requireAuth, (req, res) => {
       INSERT INTO rentals (
         rental_number, product_id, renter_id, owner_id,
         monthly_rent, security_deposit, duration_months, total_amount,
-        start_date, end_date, payment_method, payment_status, rental_status, deposit_status, pickup_notes, transaction_id
+        start_date, end_date, payment_method, payment_status, rental_status, deposit_status, pickup_notes, transaction_id, utr_number, escrow_status
       ) VALUES (
         ?, ?, ?, ?,
         ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, 'held', ?, ?
+        ?, ?, ?, ?, ?, 'held', ?, ?, ?, ?
       )
     `);
 
@@ -75,37 +84,41 @@ router.post('/', requireAuth, (req, res) => {
       totalAmount,
       start_date,
       endDateStr,
-      payment_method,
+      isCod ? 'Cash on Campus Handover (COD)' : 'CampusMarket UPI QR (Online Escrow)',
       actualPaymentStatus,
       actualRentalStatus,
       pickup_notes || 'Campus handover arranged via CampusMarket chat',
-      actualTxnId
+      actualTxnId,
+      cleanUtr,
+      actualEscrowStatus
     );
 
     // Update product availability to 'rented'
     db.prepare("UPDATE products SET availability = 'rented' WHERE id = ?").run(product.id);
 
     // Notifications
+    const ownerNotifTitle = isCod 
+      ? 'New Rental (Cash on Handover)' 
+      : `CampusMarket Escrow: Rental Payment Received for "${product.title}"!`;
+
+    const ownerNotifMsg = isCod
+      ? `${req.user.name} booked "${product.title}" for ${months} mo (Cash on Handover). Coordinate meetup in chat to hand over item and collect rent & deposit.`
+      : `CampusMarket Admin: Payment of ₹${totalAmount} (Rent: ₹${rentTotal} + Security Deposit: ₹${deposit}) from renter ${req.user.name} (Phone: ${req.user.phone || 'In chat'}) for "${product.title}" (UTR: ${cleanUtr || actualTxnId}) is held in CampusMarket Escrow. Hand over item at "${pickup_notes || 'College Campus'}". Once renter confirms receipt, rent will be transferred to you!`;
+
     db.prepare(`
       INSERT INTO notifications (user_id, title, message, type, link)
       VALUES (?, ?, ?, 'rental', '/dashboard?tab=rentals')
-    `).run(
-      product.seller_id,
-      isHandover ? 'New Rental Request (Pay on Handover)' : 'Item Rented Out & Paid!',
-      isHandover
-        ? `${req.user.name} rented "${product.title}" for ${months} mo (Pay on Meetup). Security deposit ₹${deposit} & rent ₹${rentTotal} to be collected at meetup.`
-        : `${req.user.name} rented "${product.title}" for ${months} month(s). Payment verified (${payment_method}, Ref: ${actualTxnId}). Security deposit ₹${deposit} held safely.`
-    );
+    `).run(product.seller_id, ownerNotifTitle, ownerNotifMsg);
 
     db.prepare(`
       INSERT INTO notifications (user_id, title, message, type, link)
       VALUES (?, ?, ?, 'rental', '/dashboard?tab=rentals')
     `).run(
       req.user.id,
-      isHandover ? 'Rental Booked (Pay on Handover)' : 'Rental Confirmed!',
-      isHandover
+      isCod ? 'Rental Booked (Cash on Handover)' : 'Rental Booked & Protected by CampusMarket Escrow!',
+      isCod
         ? `Your rental for "${product.title}" is booked! Meet owner on campus to pay total ₹${totalAmount} and receive item.`
-        : `Your rental for "${product.title}" is active until ${endDateStr}. Contact owner to receive item.`
+        : `Your payment of ₹${totalAmount} (UTR: ${cleanUtr || actualTxnId}) is held safely in CampusMarket Escrow. Contact owner to receive item.`
     );
 
     const rental = db.prepare(`

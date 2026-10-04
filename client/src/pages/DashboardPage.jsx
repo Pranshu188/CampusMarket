@@ -391,15 +391,20 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
                         <div>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Order ID: </span>
                           <strong style={{ fontSize: '0.85rem' }}>{order.order_number}</strong>
-                          {order.transaction_id && order.transaction_id !== 'HANDOVER-PENDING' && (
+                          {order.utr_number && (
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
-                              (Txn: <code>{order.transaction_id}</code>)
+                              (UTR: <code style={{ color: '#065f46', background: '#ecfdf5', padding: '1px 5px', borderRadius: '3px' }}>{order.utr_number}</code>)
                             </span>
                           )}
                         </div>
                         <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                          <span className={`badge ${order.payment_status === 'paid' ? 'badge-sell' : 'badge-warning'}`}>
-                            {order.payment_status === 'paid' ? '✓ Paid Online' : '⏳ Pay on Handover'}
+                          <span className={`badge ${
+                            order.escrow_status === 'held' ? 'badge-warning' :
+                            order.escrow_status === 'released' || order.order_status === 'completed' ? 'badge-sell' : 'badge-rent'
+                          }`}>
+                            {order.escrow_status === 'held' 
+                              ? '🛡️ Held in Admin Escrow' 
+                              : (order.order_status === 'completed' ? '✓ Payout Released to Seller' : '⏳ COD on Handover')}
                           </span>
                           <span className="badge badge-accent" style={{ textTransform: 'capitalize' }}>
                             {order.order_status}
@@ -419,10 +424,12 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
                             Seller: <strong>{order.seller_name}</strong> ({order.seller_college || 'Student'})
                           </div>
                           <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-                            Method: <strong>{order.payment_method || 'UPI / SafePay'}</strong>
+                            Method: <strong>{order.payment_method || 'CampusMarket UPI QR'}</strong>
                           </div>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: order.payment_status === 'paid' ? 'var(--primary)' : 'var(--warning)', marginTop: '0.25rem' }}>
-                            {order.payment_status === 'paid' ? `Amount Paid: ${formatPrice(order.amount)}` : `To Pay at Handover: ${formatPrice(order.amount)}`}
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: order.order_status === 'completed' ? '#059669' : 'var(--primary)', marginTop: '0.25rem' }}>
+                            {order.escrow_status === 'held' 
+                              ? `Escrow Deposited: ${formatPrice(order.amount)}` 
+                              : (order.payment_status === 'pending_handover' ? `To Pay on COD: ${formatPrice(order.amount)}` : `Amount Paid: ${formatPrice(order.amount)}`)}
                           </div>
                         </div>
 
@@ -438,8 +445,10 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
                             <button 
                               onClick={() => handleUpdateOrderStatus(order.id, 'completed')}
                               className="btn btn-primary btn-sm"
+                              style={{ background: '#059669', borderColor: '#059669' }}
+                              title="Click when you have received the item from the seller"
                             >
-                              Mark Received
+                              ✓ Confirm Received & Release Escrow
                             </button>
                           )}
 

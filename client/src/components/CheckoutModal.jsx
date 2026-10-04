@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   X, CheckCircle, ShieldCheck, MapPin, Calendar, CreditCard, 
-  Smartphone, Building2, AlertCircle, Handshake, Lock, ArrowRight, Clock
+  Smartphone, Building2, AlertCircle, Handshake, Lock, ArrowRight, Clock, Shield
 } from 'lucide-react';
 import { api } from '../services/api';
 import PaymentGatewayModal from './PaymentGatewayModal';
@@ -11,8 +11,8 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [pickupNotes, setPickupNotes] = useState('Campus handover near college library');
   
-  // Checkout Choice: 'online_gateway' | 'handover'
-  const [checkoutOption, setCheckoutOption] = useState('online_gateway');
+  // Checkout Choice: 'online_escrow' | 'cod'
+  const [checkoutOption, setCheckoutOption] = useState('online_escrow');
   
   const [isGatewayOpen, setIsGatewayOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -35,17 +35,17 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
     }).format(val || 0);
   };
 
-  // 1. If user chose online payment, open the gateway
+  // 1. If user chose online escrow payment, open the CampusMarket QR Gateway
   const handleProceedClick = () => {
     setError('');
-    if (checkoutOption === 'online_gateway') {
+    if (checkoutOption === 'online_escrow') {
       setIsGatewayOpen(true);
     } else {
-      handlePayOnHandover();
+      handlePayOnCod();
     }
   };
 
-  // 2. Gateway success callback (after user scans UPI, submits OTP, or authorizes NetBanking)
+  // 2. Gateway success callback (after user scans CampusMarket QR and submits UTR)
   const handleGatewaySuccess = async (paymentDetails) => {
     setIsGatewayOpen(false);
     setProcessing(true);
@@ -56,7 +56,8 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
         const orderRes = await api.createOrder({
           product_id: product.id,
           payment_method: paymentDetails.payment_method,
-          payment_status: 'paid',
+          payment_status: 'escrow_held',
+          utr_number: paymentDetails.utr_number,
           transaction_id: paymentDetails.transaction_id,
           pickup_notes: pickupNotes
         });
@@ -65,8 +66,9 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
           type: 'buy',
           orderNumber: orderRes.order.order_number,
           transactionId: paymentDetails.transaction_id,
+          utrNumber: paymentDetails.utr_number,
           paymentMethod: paymentDetails.payment_method,
-          paymentStatus: 'paid',
+          paymentStatus: 'escrow_held',
           amount: totalAmount,
           sellerName: product.seller_name
         });
@@ -78,7 +80,8 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
           duration_months: durationMonths,
           start_date: startDate,
           payment_method: paymentDetails.payment_method,
-          payment_status: 'paid',
+          payment_status: 'escrow_held',
+          utr_number: paymentDetails.utr_number,
           transaction_id: paymentDetails.transaction_id,
           pickup_notes: pickupNotes
         });
@@ -87,8 +90,9 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
           type: 'rent',
           orderNumber: rentalRes.rental.rental_number,
           transactionId: paymentDetails.transaction_id,
+          utrNumber: paymentDetails.utr_number,
           paymentMethod: paymentDetails.payment_method,
-          paymentStatus: 'paid',
+          paymentStatus: 'escrow_held',
           amount: totalAmount,
           deposit: securityDeposit,
           sellerName: product.seller_name
@@ -104,8 +108,8 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
     }
   };
 
-  // 3. User chose to pay on handover at college meetup
-  const handlePayOnHandover = async () => {
+  // 3. User chose Cash on Delivery / Campus Handover (COD)
+  const handlePayOnCod = async () => {
     setProcessing(true);
     setError('');
 
@@ -113,18 +117,18 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
       if (mode === 'buy') {
         const orderRes = await api.createOrder({
           product_id: product.id,
-          payment_method: 'Pay on Campus Handover (Cash/UPI)',
-          payment_status: 'pending_pickup',
-          transaction_id: 'HANDOVER-PENDING',
+          payment_method: 'Cash on Delivery (COD) / Handover',
+          payment_status: 'pending_handover',
+          transaction_id: 'COD-CAMPUS-HANDOVER',
           pickup_notes: pickupNotes
         });
 
         setOrderComplete({
           type: 'buy',
           orderNumber: orderRes.order.order_number,
-          transactionId: 'HANDOVER-PENDING',
-          paymentMethod: 'Pay on Campus Handover',
-          paymentStatus: 'pending_pickup',
+          transactionId: 'COD-CAMPUS-HANDOVER',
+          paymentMethod: 'Cash on Delivery (COD)',
+          paymentStatus: 'pending_handover',
           amount: totalAmount,
           sellerName: product.seller_name
         });
@@ -135,18 +139,18 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
           product_id: product.id,
           duration_months: durationMonths,
           start_date: startDate,
-          payment_method: 'Pay on Campus Handover (Cash/UPI)',
-          payment_status: 'pending_pickup',
-          transaction_id: 'HANDOVER-PENDING',
+          payment_method: 'Cash on Delivery (COD) / Handover',
+          payment_status: 'pending_handover',
+          transaction_id: 'COD-CAMPUS-HANDOVER',
           pickup_notes: pickupNotes
         });
 
         setOrderComplete({
           type: 'rent',
           orderNumber: rentalRes.rental.rental_number,
-          transactionId: 'HANDOVER-PENDING',
-          paymentMethod: 'Pay on Campus Handover',
-          paymentStatus: 'pending_pickup',
+          transactionId: 'COD-CAMPUS-HANDOVER',
+          paymentMethod: 'Cash on Delivery (COD)',
+          paymentStatus: 'pending_handover',
           amount: totalAmount,
           deposit: securityDeposit,
           sellerName: product.seller_name
@@ -155,8 +159,8 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
         if (onSuccess) onSuccess();
       }
     } catch (err) {
-      console.error('Handover order error:', err);
-      setError(err.message || 'Failed to place handover order.');
+      console.error('COD order error:', err);
+      setError(err.message || 'Failed to place COD order.');
     } finally {
       setProcessing(false);
     }
@@ -181,8 +185,8 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
             <div>
               {/* Header */}
               <div style={{ marginBottom: '1.25rem' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.3rem' }}>
-                  <ShieldCheck size={16} /> CampusMarket Verified Student Exchange
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#059669', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                  <ShieldCheck size={16} /> CampusMarket Admin Escrow Protection
                 </div>
                 <h3 style={{ fontSize: '1.35rem', margin: 0 }}>
                   {mode === 'buy' ? 'Purchase Item Checkout' : 'Campus Rental Booking'}
@@ -225,7 +229,7 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                     Seller: <strong>{product.seller_name}</strong> • {product.condition}
                   </div>
-                  <div style={{ fontSize: '0.775rem', color: 'var(--primary)', fontWeight: 600, marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: '0.775rem', color: '#059669', fontWeight: 600, marginTop: '0.2rem' }}>
                     📍 Campus: {product.location}
                   </div>
                 </div>
@@ -294,16 +298,16 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
               {/* Payment Method / Mode Selector */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.65rem' }}>
-                  Select Payment & Handover Method
+                  Choose How You Want to Pay
                 </label>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-                  {/* Option 1: Online via Payment Gateway */}
+                  {/* Option 1: CampusMarket UPI QR (Online Admin Escrow) */}
                   <div 
-                    onClick={() => setCheckoutOption('online_gateway')}
+                    onClick={() => setCheckoutOption('online_escrow')}
                     style={{
-                      border: checkoutOption === 'online_gateway' ? '2px solid var(--primary)' : '1px solid var(--border)',
-                      background: checkoutOption === 'online_gateway' ? 'var(--primary-light)' : '#ffffff',
+                      border: checkoutOption === 'online_escrow' ? '2px solid #059669' : '1px solid var(--border)',
+                      background: checkoutOption === 'online_escrow' ? '#ecfdf5' : '#ffffff',
                       borderRadius: 'var(--radius-md)',
                       padding: '0.85rem 1rem',
                       cursor: 'pointer',
@@ -316,31 +320,31 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                     <input 
                       type="radio" 
                       name="checkoutOption" 
-                      checked={checkoutOption === 'online_gateway'} 
-                      onChange={() => setCheckoutOption('online_gateway')}
-                      style={{ marginTop: '3px', cursor: 'pointer' }}
+                      checked={checkoutOption === 'online_escrow'} 
+                      onChange={() => setCheckoutOption('online_escrow')}
+                      style={{ marginTop: '3px', cursor: 'pointer', accentColor: '#059669' }}
                     />
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                        <strong style={{ fontSize: '0.9rem', color: checkoutOption === 'online_gateway' ? 'var(--primary)' : 'var(--text-main)' }}>
-                          Pay Online via CampusPay / Razorpay Gateway
+                        <strong style={{ fontSize: '0.9rem', color: checkoutOption === 'online_escrow' ? '#065f46' : 'var(--text-main)' }}>
+                          Pay Online via CampusMarket UPI QR (Admin Escrow)
                         </strong>
                         <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#059669', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>
-                          RECOMMENDED
+                          SAFE ESCROW
                         </span>
                       </div>
                       <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                        UPI (GPay, PhonePe, Paytm QR), RuPay/Debit Card with 3D Secure OTP, or NetBanking. Money safely held in Escrow until meetup.
+                        Scan the CampusMarket UPI QR code. Money goes to Admin Escrow account and is <strong>held safely</strong>. The seller is only paid after you receive the book!
                       </div>
                     </div>
                   </div>
 
-                  {/* Option 2: Pay on Campus Handover */}
+                  {/* Option 2: Cash on Delivery / Handover (COD) */}
                   <div 
-                    onClick={() => setCheckoutOption('handover')}
+                    onClick={() => setCheckoutOption('cod')}
                     style={{
-                      border: checkoutOption === 'handover' ? '2px solid var(--primary)' : '1px solid var(--border)',
-                      background: checkoutOption === 'handover' ? 'var(--primary-light)' : '#ffffff',
+                      border: checkoutOption === 'cod' ? '2px solid #059669' : '1px solid var(--border)',
+                      background: checkoutOption === 'cod' ? '#ecfdf5' : '#ffffff',
                       borderRadius: 'var(--radius-md)',
                       padding: '0.85rem 1rem',
                       cursor: 'pointer',
@@ -353,21 +357,21 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                     <input 
                       type="radio" 
                       name="checkoutOption" 
-                      checked={checkoutOption === 'handover'} 
-                      onChange={() => setCheckoutOption('handover')}
-                      style={{ marginTop: '3px', cursor: 'pointer' }}
+                      checked={checkoutOption === 'cod'} 
+                      onChange={() => setCheckoutOption('cod')}
+                      style={{ marginTop: '3px', cursor: 'pointer', accentColor: '#059669' }}
                     />
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                        <strong style={{ fontSize: '0.9rem', color: checkoutOption === 'handover' ? 'var(--primary)' : 'var(--text-main)' }}>
-                          Pay on Campus Handover (Cash or Meetup UPI)
+                        <strong style={{ fontSize: '0.9rem', color: checkoutOption === 'cod' ? '#065f46' : 'var(--text-main)' }}>
+                          Cash on Delivery / Campus Handover (COD)
                         </strong>
                         <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>
                           Inspect & Pay
                         </span>
                       </div>
                       <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                        Inspect textbook/item in person first. Pay seller in cash or direct UPI at campus library/canteen. Order status marked "Pending Handover".
+                        Meet seller at the college library or canteen, physically inspect the item, and pay in cash or personal UPI directly on the spot.
                       </div>
                     </div>
                   </div>
@@ -399,7 +403,7 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.35rem', color: 'var(--text-muted)' }}>
-                  <span>CampusMarket Student Protection</span>
+                  <span>CampusMarket Admin Escrow Protection</span>
                   <span style={{ color: 'var(--success)', fontWeight: 600 }}>FREE (₹0)</span>
                 </div>
 
@@ -414,7 +418,7 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                   marginTop: '0.65rem'
                 }}>
                   <span>Total Amount</span>
-                  <span style={{ color: 'var(--primary)' }}>{formatPrice(totalAmount)}</span>
+                  <span style={{ color: '#059669' }}>{formatPrice(totalAmount)}</span>
                 </div>
               </div>
 
@@ -429,44 +433,46 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                   padding: '0.85rem', 
                   fontSize: '1rem', 
                   fontWeight: 700,
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem'
                 }}
               >
-                {processing ? 'Processing...' : checkoutOption === 'online_gateway' ? (
+                {processing ? 'Processing...' : checkoutOption === 'online_escrow' ? (
                   <>
-                    <CreditCard size={18} /> Proceed to Payment Gateway ({formatPrice(totalAmount)}) <ArrowRight size={16} />
+                    <Smartphone size={18} /> Pay via CampusMarket UPI QR ({formatPrice(totalAmount)}) <ArrowRight size={16} />
                   </>
                 ) : (
                   <>
-                    <Handshake size={18} /> Place Order (Pay {formatPrice(totalAmount)} on Handover)
+                    <Handshake size={18} /> Place Order (Pay {formatPrice(totalAmount)} on COD / Handover)
                   </>
                 )}
               </button>
             </div>
           ) : (
-            /* Order / Rental Success Confirmation View */
+            /* Order Success View with Escrow & Seller notification confirmation */
             <div style={{ textAlign: 'center', padding: '1.5rem 0.5rem' }}>
               <div style={{
                 width: '64px',
                 height: '64px',
                 borderRadius: '50%',
-                background: orderComplete.paymentStatus === 'paid' ? 'var(--success-bg)' : '#fef3c7',
-                color: orderComplete.paymentStatus === 'paid' ? 'var(--success)' : '#d97706',
+                background: orderComplete.paymentStatus === 'escrow_held' ? '#ecfdf5' : '#fef3c7',
+                color: orderComplete.paymentStatus === 'escrow_held' ? '#059669' : '#d97706',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1.25rem'
               }}>
-                {orderComplete.paymentStatus === 'paid' ? <CheckCircle size={36} /> : <Clock size={36} />}
+                {orderComplete.paymentStatus === 'escrow_held' ? <ShieldCheck size={38} /> : <Clock size={36} />}
               </div>
 
-              <h3 style={{ fontSize: '1.45rem', marginBottom: '0.4rem' }}>
-                {orderComplete.paymentStatus === 'paid' 
-                  ? (orderComplete.type === 'buy' ? 'Order & Payment Confirmed!' : 'Rental & Payment Confirmed!')
-                  : 'Order Reserved (Pay on Handover)!'}
+              <h3 style={{ fontSize: '1.45rem', marginBottom: '0.4rem', color: '#0f172a' }}>
+                {orderComplete.paymentStatus === 'escrow_held' 
+                  ? 'Payment Held in Admin Escrow!' 
+                  : 'Order Reserved (Pay on COD Handover)!'}
               </h3>
               
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
@@ -481,12 +487,12 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                 border: '1px solid var(--border)',
                 textAlign: 'left',
                 fontSize: '0.85rem',
-                marginBottom: '1.5rem'
+                marginBottom: '1.25rem'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Payment Status:</span>
-                  <span className={`badge ${orderComplete.paymentStatus === 'paid' ? 'badge-sell' : 'badge-warning'}`}>
-                    {orderComplete.paymentStatus === 'paid' ? '✓ Paid Online (Escrow)' : '⏳ Pay at Campus Meetup'}
+                  <span style={{ color: 'var(--text-muted)' }}>Escrow & Payment Status:</span>
+                  <span className={`badge ${orderComplete.paymentStatus === 'escrow_held' ? 'badge-sell' : 'badge-warning'}`}>
+                    {orderComplete.paymentStatus === 'escrow_held' ? '🛡️ Held in CampusMarket Escrow' : '⏳ Pay on COD Handover'}
                   </span>
                 </div>
 
@@ -495,12 +501,14 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                   <strong>{orderComplete.paymentMethod}</strong>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Transaction Reference:</span>
-                  <code style={{ fontSize: '0.775rem', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>
-                    {orderComplete.transactionId}
-                  </code>
-                </div>
+                {orderComplete.utrNumber && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>UPI UTR Ref:</span>
+                    <code style={{ fontSize: '0.8rem', background: '#ecfdf5', color: '#065f46', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                      {orderComplete.utrNumber}
+                    </code>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Product:</span>
@@ -515,36 +523,30 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
-                  <span style={{ fontWeight: 700 }}>Total Amount:</span>
-                  <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>
+                  <span style={{ fontWeight: 700 }}>Amount:</span>
+                  <strong style={{ color: '#059669', fontSize: '1rem' }}>
                     {formatPrice(orderComplete.amount)}
                   </strong>
                 </div>
-
-                {orderComplete.deposit && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--primary)', marginTop: '0.35rem', fontSize: '0.8rem' }}>
-                    <span>Security Deposit Held:</span>
-                    <span>{formatPrice(orderComplete.deposit)} (Refundable)</span>
-                  </div>
-                )}
               </div>
 
-              {/* Handover Guidance */}
+              {/* Escrow Rule Note */}
               <div style={{
-                background: '#eff6ff',
-                border: '1px solid #bfdbfe',
+                background: '#ecfdf5',
+                border: '1px solid #a7f3d0',
                 borderRadius: 'var(--radius-md)',
-                padding: '0.75rem 1rem',
+                padding: '0.85rem 1rem',
                 fontSize: '0.8rem',
-                color: '#1e40af',
+                color: '#065f46',
                 textAlign: 'left',
                 marginBottom: '1.5rem',
-                display: 'flex',
-                gap: '0.5rem'
+                lineHeight: 1.45
               }}>
-                <MapPin size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div style={{ fontWeight: 700, marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ShieldCheck size={16} /> Notification Sent to Seller {orderComplete.sellerName}:
+                </div>
                 <div>
-                  <strong>Next Step:</strong> Open chat with <strong>{orderComplete.sellerName}</strong> to coordinate meeting at college library/canteen.
+                  CampusMarket Admin has notified the seller that payment has been safely received into Escrow. Meet the seller at <strong>{pickupNotes}</strong> to collect your item. <strong>Only when you click "Mark Received" will the money be released to the seller.</strong>
                 </div>
               </div>
 
@@ -556,7 +558,7 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                     if (onOpenChat) onOpenChat(product);
                   }}
                   className="btn btn-primary"
-                  style={{ width: '100%', padding: '0.75rem', fontWeight: 700 }}
+                  style={{ width: '100%', padding: '0.75rem', fontWeight: 700, background: '#059669' }}
                 >
                   💬 Chat with Seller to Coordinate Handover
                 </button>
@@ -575,7 +577,7 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
         </div>
       </div>
 
-      {/* POPUP PAYMENT GATEWAY */}
+      {/* POPUP CAMPUSMARKET QR ESCROW GATEWAY */}
       {isGatewayOpen && (
         <PaymentGatewayModal
           isOpen={isGatewayOpen}

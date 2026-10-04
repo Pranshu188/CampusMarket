@@ -417,6 +417,26 @@ export default function AdminDashboardPage({ onNavigate }) {
     }
   };
 
+  const handleReleaseEscrow = async (orderId) => {
+    if (!window.confirm('Release escrow funds to the seller for this order?')) return;
+    try {
+      await api.adminReleaseEscrow(orderId);
+      setOrdersList(prev => prev.map(o => o.id === orderId ? { ...o, escrow_status: 'released', payment_status: 'paid' } : o));
+      alert('Escrow payout released! Seller has been notified.');
+    } catch (e) {
+      alert(e.message || 'Failed to release escrow');
+    }
+  };
+
+  const handleNotifySeller = async (orderId) => {
+    try {
+      await api.adminNotifySeller(orderId);
+      alert('Verified payment details and buyer contacts sent to seller!');
+    } catch (e) {
+      alert(e.message || 'Failed to notify seller');
+    }
+  };
+
   const formatPrice = (val) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -1059,7 +1079,15 @@ export default function AdminDashboardPage({ onNavigate }) {
           {/* TAB: ORDERS MANAGEMENT */}
           {activeTab === 'orders' && (
             <div>
-              <h2 style={{ fontSize: '1.35rem', marginBottom: '1.25rem' }}>Campus Orders & Transactions</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.35rem', margin: 0 }}>Campus Orders & Escrow Management</h2>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Admin acts as middleman: funds held safely until buyer confirms receipt, then released to seller.
+                  </div>
+                </div>
+              </div>
+
               {ordersList.length > 0 ? (
                 <div className="data-table-container">
                   <table className="data-table">
@@ -1067,12 +1095,13 @@ export default function AdminDashboardPage({ onNavigate }) {
                       <tr>
                         <th>Order #</th>
                         <th>Product</th>
-                        <th>Buyer / Seller</th>
+                        <th>Buyer</th>
+                        <th>Seller</th>
                         <th>Amount</th>
-                        <th>Payment Status</th>
-                        <th>Payment Method / Txn</th>
-                        <th>Order Status</th>
-                        <th>Date</th>
+                        <th>Escrow / Payment</th>
+                        <th>UTR Ref</th>
+                        <th>Status</th>
+                        <th>Escrow Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1081,23 +1110,37 @@ export default function AdminDashboardPage({ onNavigate }) {
                           <td style={{ fontWeight: 700, fontSize: '0.8rem' }}>{ord.order_number}</td>
                           <td style={{ fontWeight: 600, fontSize: '0.85rem' }}>{ord.product_title}</td>
                           <td style={{ fontSize: '0.8rem' }}>
-                            <div>Buyer: <strong>{ord.buyer_name}</strong></div>
-                            <div style={{ color: 'var(--text-muted)' }}>Seller: {ord.seller_name}</div>
+                            <strong>{ord.buyer_name}</strong>
+                            <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>
+                              {ord.buyer_phone || ord.buyer_email}
+                            </div>
+                          </td>
+                          <td style={{ fontSize: '0.8rem' }}>
+                            <strong>{ord.seller_name}</strong>
+                            <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>
+                              {ord.seller_phone || ord.seller_email}
+                            </div>
                           </td>
                           <td style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.85rem' }}>
                             ₹{ord.amount}
                           </td>
                           <td>
-                            <span className={`badge ${ord.payment_status === 'paid' ? 'badge-sell' : 'badge-warning'}`}>
-                              {ord.payment_status === 'paid' ? '✓ Paid Online' : '⏳ Pay on Handover'}
+                            <span className={`badge ${
+                              ord.escrow_status === 'held' ? 'badge-warning' :
+                              ord.escrow_status === 'released' || ord.payment_status === 'paid' ? 'badge-sell' : 'badge-rent'
+                            }`}>
+                              {ord.escrow_status === 'held' 
+                                ? '🛡️ Held by Admin' 
+                                : (ord.escrow_status === 'released' || ord.payment_status === 'paid' ? '✓ Released to Seller' : '⏳ COD on Handover')}
                             </span>
                           </td>
                           <td style={{ fontSize: '0.775rem' }}>
-                            <div>{ord.payment_method || 'UPI / Gateway'}</div>
-                            {ord.transaction_id && (
-                              <code style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                                {ord.transaction_id}
+                            {ord.utr_number ? (
+                              <code style={{ fontSize: '0.75rem', color: '#065f46', background: '#ecfdf5', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                                {ord.utr_number}
                               </code>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>{ord.payment_method || 'COD'}</span>
                             )}
                           </td>
                           <td>
@@ -1105,8 +1148,28 @@ export default function AdminDashboardPage({ onNavigate }) {
                               {ord.order_status}
                             </span>
                           </td>
-                          <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {new Date(ord.created_at).toLocaleDateString()}
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                              <button
+                                onClick={() => handleNotifySeller(ord.id)}
+                                className="btn btn-sm"
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.725rem', background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', cursor: 'pointer' }}
+                                title="Send verified payment notice to seller"
+                              >
+                                📩 Notify Seller
+                              </button>
+
+                              {ord.escrow_status === 'held' && (
+                                <button
+                                  onClick={() => handleReleaseEscrow(ord.id)}
+                                  className="btn btn-sm"
+                                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.725rem', background: '#059669', color: '#fff', border: 'none', cursor: 'pointer' }}
+                                  title="Release payment from admin escrow to seller"
+                                >
+                                  💸 Release Payout
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}

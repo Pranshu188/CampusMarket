@@ -113,9 +113,13 @@ export const api = {
   createReview: (data) => request('/reviews', { method: 'POST', body: JSON.stringify(data) }),
   getSellerReviews: (sellerId) => request(`/reviews/seller/${sellerId}`),
 
-  // Payment sandbox
+  // CampusMarket Escrow Payment
+  getEscrowInfo: () => request('/payment/escrow-info'),
   createPaymentOrder: (data) => request('/payment/create-order', { method: 'POST', body: JSON.stringify(data) }),
+  verifyUtr: (data) => request('/payment/verify-utr', { method: 'POST', body: JSON.stringify(data) }),
   verifyPayment: (data) => request('/payment/verify', { method: 'POST', body: JSON.stringify(data) }),
+  adminReleaseEscrow: (orderId) => request(`/admin/orders/${orderId}/release-escrow`, { method: 'PATCH' }),
+  adminNotifySeller: (orderId) => request(`/admin/orders/${orderId}/notify-seller`, { method: 'PATCH' }),
 
   // Admin
   getAdminStats: () => request('/admin/stats'),

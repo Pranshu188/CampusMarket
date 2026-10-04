@@ -16,6 +16,7 @@ server/*.db-shm
 # Uploads
 server/uploads/*
 !server/uploads/.gitkeep
+!server/uploads/bs_grewal_44th_edition.jpg
 
 # Logs
 *.log

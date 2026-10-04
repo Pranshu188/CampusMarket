@@ -18,7 +18,16 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import { PolicyPage, AboutPage } from './pages/PolicyPages';
 
 function MainApp() {
-  const [currentPath, setCurrentPath] = useState(() => window.location.pathname || '/');
+  const [currentPath, setCurrentPath] = useState(() => {
+    const p = window.location.pathname || '/';
+    if (p === '/admin/login' || (p === '/admin' && localStorage.getItem('cm_user_role') !== 'admin')) {
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, '', '/');
+      }
+      return '/';
+    }
+    return p;
+  });
   const [navParams, setNavParams] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const obj = {};

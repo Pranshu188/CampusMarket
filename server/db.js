@@ -455,7 +455,7 @@ function seedInitialData() {
       location: 'LD College Campus / Navrangpura, Ahmedabad',
       availability: 'available',
       status: 'active',
-      image: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?auto=format&fit=crop&w=800&q=80'
+      image: '/uploads/bs_grewal_44th_edition.jpg'
     },
     {
       title: 'Casio FX-991EX Classwiz Scientific Calculator (552 Functions)',

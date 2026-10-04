@@ -515,36 +515,6 @@ export default function AuthModal({ onNavigate }) {
             </>
           )}
         </div>
-
-        {/* Dedicated Admin Portal Link */}
-        <div style={{
-          marginTop: '1.25rem',
-          paddingTop: '0.85rem',
-          borderTop: '1px solid var(--border)',
-          textAlign: 'center',
-          fontSize: '0.8rem',
-          color: 'var(--text-muted)'
-        }}>
-          Campus Moderator or Staff?{' '}
-          <button
-            type="button"
-            onClick={() => {
-              closeAuthModal();
-              if (onNavigate) onNavigate('/admin/login');
-            }}
-            style={{
-              color: 'var(--primary)',
-              fontWeight: 700,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              cursor: 'pointer'
-            }}
-          >
-            <Shield size={13} />
-            Go to Admin Login Portal →
-          </button>
-        </div>
       </div>
     </div>
   );

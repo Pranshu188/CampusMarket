@@ -40,6 +40,9 @@ export function AuthProvider({ children }) {
     try {
       const data = await api.getMe();
       setUser(data.user);
+      if (data.user?.role) {
+        localStorage.setItem('cm_user_role', data.user.role);
+      }
       if (data.counts) {
         setCounts(data.counts);
       }
@@ -57,6 +60,9 @@ export function AuthProvider({ children }) {
 
   const handleAuthSuccess = (res) => {
     localStorage.setItem('cm_token', res.token);
+    if (res.user?.role) {
+      localStorage.setItem('cm_user_role', res.user.role);
+    }
     setToken(res.token);
     setUser(res.user);
     closeAuthModal();
@@ -95,6 +101,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('cm_token');
+    localStorage.removeItem('cm_user_role');
     setToken(null);
     setUser(null);
     setCounts({

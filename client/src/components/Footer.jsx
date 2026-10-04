@@ -57,15 +57,6 @@ export default function Footer({ onNavigate }) {
               <li><a href="/terms" onClick={(e) => { e.preventDefault(); onNavigate('/terms'); }}>Terms & Conditions</a></li>
               <li><a href="/privacy" onClick={(e) => { e.preventDefault(); onNavigate('/privacy'); }}>Privacy Policy</a></li>
               <li><a href="/about" onClick={(e) => { e.preventDefault(); onNavigate('/about'); }}>About CampusMarket</a></li>
-              <li>
-                <a 
-                  href="/admin" 
-                  onClick={(e) => { e.preventDefault(); onNavigate('/admin'); }}
-                  style={{ color: 'var(--primary)', fontWeight: 600 }}
-                >
-                  Admin / Moderator Portal
-                </a>
-              </li>
             </ul>
           </div>
 

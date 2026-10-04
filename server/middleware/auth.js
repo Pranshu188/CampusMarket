@@ -12,7 +12,7 @@ function requireAuth(req, res, next) {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare('SELECT id, name, email, phone, role, college, course, branch, semester, location, bio, avatar, status FROM users WHERE id = ?').get(decoded.id);
+    const user = db.prepare('SELECT id, name, email, phone, role, college, course, branch, semester, location, bio, avatar, status, verification_status, id_card_image FROM users WHERE id = ?').get(decoded.id);
     
     if (!user) {
       return res.status(401).json({ error: 'User account not found.' });
@@ -44,7 +44,7 @@ function optionalAuth(req, res, next) {
     const token = authHeader.split(' ')[1];
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      const user = db.prepare('SELECT id, name, email, phone, role, college, course, branch, semester, location, bio, avatar, status FROM users WHERE id = ?').get(decoded.id);
+      const user = db.prepare('SELECT id, name, email, phone, role, college, course, branch, semester, location, bio, avatar, status, verification_status, id_card_image FROM users WHERE id = ?').get(decoded.id);
       if (user && user.status !== 'suspended') {
         req.user = user;
       }

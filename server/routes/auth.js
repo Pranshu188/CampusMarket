@@ -20,7 +20,7 @@ function generateToken(user) {
 // 1. Register with Email
 router.post('/register', (req, res) => {
   try {
-    const { name, email, password, phone, college, course, branch, semester, location } = req.body;
+    const { name, email, password, phone, college, course, branch, semester, location, id_card_image } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email and password are required.' });
@@ -37,8 +37,8 @@ router.post('/register', (req, res) => {
 
     const passwordHash = bcrypt.hashSync(password, 10);
     const insert = db.prepare(`
-      INSERT INTO users (name, email, phone, password_hash, role, college, course, branch, semester, location, avatar)
-      VALUES (?, ?, ?, ?, 'student', ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (name, email, phone, password_hash, role, college, course, branch, semester, location, avatar, verification_status, id_card_image)
+      VALUES (?, ?, ?, ?, 'student', ?, ?, ?, ?, ?, ?, 'pending', ?)
     `);
 
     const defaultAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=0f766e,15803d,0369a1`;
@@ -53,10 +53,11 @@ router.post('/register', (req, res) => {
       branch || null,
       semester ? parseInt(semester) : null,
       location || 'Campus',
-      defaultAvatar
+      defaultAvatar,
+      id_card_image || ''
     );
 
-    const newUser = db.prepare('SELECT id, name, email, phone, role, college, course, branch, semester, location, bio, avatar FROM users WHERE id = ?').get(info.lastInsertRowid);
+    const newUser = db.prepare('SELECT id, name, email, phone, role, college, course, branch, semester, location, bio, avatar, status, verification_status, id_card_image, created_at FROM users WHERE id = ?').get(info.lastInsertRowid);
     const token = generateToken(newUser);
 
     // Create welcome notification
@@ -66,9 +67,9 @@ router.post('/register', (req, res) => {
     `).run(
       newUser.id,
       'Welcome to CampusMarket!',
-      'Buy, sell, or rent textbooks and campus essentials with fellow students directly.',
+      'Your student account is active! Campus verification is under review by administrator.',
       'system',
-      '/profile'
+      '/dashboard'
     );
 
     res.status(201).json({ user: newUser, token });
@@ -202,7 +203,7 @@ router.get('/me', requireAuth, (req, res) => {
   const unreadMessages = db.prepare('SELECT COUNT(*) as count FROM messages WHERE recipient_id = ? AND is_read = 0').get(user.id).count;
 
   // Count active listings
-  const activeListings = db.prepare('SELECT COUNT(*) as count FROM products WHERE seller_id = ? AND status = "active"').get(user.id).count;
+  const activeListings = db.prepare("SELECT COUNT(*) as count FROM products WHERE seller_id = ? AND status = 'active'").get(user.id).count;
 
   // Count saved wishlist items
   const wishlistCount = db.prepare('SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?').get(user.id).count;

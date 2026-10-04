@@ -1,10 +1,252 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, Check, X, AlertTriangle, Users, Package, ShoppingBag, 
-  Calendar, Layers, Settings, Trash2, ExternalLink, Search, RefreshCw 
+  Calendar, Layers, Settings, Trash2, ExternalLink, Search, RefreshCw,
+  ShieldCheck, CheckCircle2, XCircle, Clock, Mail, Lock
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+function AdminLoginPortal({ user, onNavigate, onAdminSuccess }) {
+  const { login } = useAuth();
+  const [adminEmail, setAdminEmail] = useState('admin@campusmarket.com');
+  const [adminPassword, setAdminPassword] = useState('admin123');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await login(adminEmail.trim(), adminPassword);
+      if (onAdminSuccess) onAdminSuccess();
+    } catch (err) {
+      setError(err.message || 'Invalid administrator credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickAdmin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await login('admin@campusmarket.com', 'admin123');
+      if (onAdminSuccess) onAdminSuccess();
+    } catch (err) {
+      setError(err.message || 'Admin sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      minHeight: '80vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2.5rem 1rem',
+      background: 'radial-gradient(ellipse at top, #0f172a 0%, #020617 100%)',
+      color: '#f8fafc'
+    }}>
+      <div style={{
+        maxWidth: '460px',
+        width: '100%',
+        background: 'rgba(30, 41, 59, 0.95)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '1.25rem',
+        padding: '2.25rem',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+      }}>
+        {/* Portal Header */}
+        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '16px',
+            background: 'linear-gradient(135deg, #0d9488 0%, #047857 100%)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            boxShadow: '0 10px 25px -5px rgba(13, 148, 136, 0.4)',
+            marginBottom: '1rem'
+          }}>
+            <Shield size={32} />
+          </div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f8fafc', margin: '0 0 0.4rem 0' }}>
+            CampusMarket Admin Portal
+          </h2>
+          <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>
+            Dedicated Moderator & Campus Administration Sign-In
+          </p>
+        </div>
+
+        {/* Notice if currently signed in as non-admin */}
+        {user && user.role !== 'admin' && (
+          <div style={{
+            background: 'rgba(234, 88, 12, 0.15)',
+            border: '1px solid rgba(234, 88, 12, 0.4)',
+            borderRadius: '0.75rem',
+            padding: '0.85rem',
+            marginBottom: '1.25rem',
+            fontSize: '0.825rem',
+            color: '#fdba74'
+          }}>
+            <strong>Student Account Active:</strong> You are currently signed in as <strong>{user.name}</strong> ({user.email}). Sign in below with your Moderator credentials to enter Admin mode.
+          </div>
+        )}
+
+        {/* 1-Click Fast Admin Sign-In */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px dashed rgba(255, 255, 255, 0.2)',
+          borderRadius: '0.75rem',
+          padding: '0.85rem 1rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.75rem'
+        }}>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase' }}>
+              ⚡ Quick Admin Access
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
+              admin@campusmarket.com
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleQuickAdmin}
+            disabled={loading}
+            style={{
+              padding: '0.45rem 0.85rem',
+              background: '#0d9488',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.5rem',
+              fontWeight: 700,
+              fontSize: '0.775rem',
+              cursor: 'pointer'
+            }}
+          >
+            {loading ? 'Entering...' : 'Instant 1-Click'}
+          </button>
+        </div>
+
+        {error && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            color: '#fca5a5',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            fontSize: '0.825rem',
+            marginBottom: '1.25rem'
+          }}>
+            {error}
+          </div>
+        )}
+
+        {/* Admin Login Form */}
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem' }}>
+              Admin Email Address
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                type="email"
+                required
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                placeholder="admin@campusmarket.com"
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 0.75rem 0.65rem 2.4rem',
+                  background: '#0f172a',
+                  border: '1px solid #334155',
+                  borderRadius: '0.5rem',
+                  color: '#f8fafc',
+                  fontSize: '0.9rem'
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem' }}>
+              Moderator Password
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                type="password"
+                required
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                placeholder="••••••••"
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 0.75rem 0.65rem 2.4rem',
+                  background: '#0f172a',
+                  border: '1px solid #334155',
+                  borderRadius: '0.5rem',
+                  color: '#f8fafc',
+                  fontSize: '0.9rem'
+                }}
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              background: 'linear-gradient(135deg, #0d9488 0%, #047857 100%)',
+              border: 'none',
+              borderRadius: '0.5rem',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            {loading ? 'Authenticating...' : 'Sign In to Moderator Console →'}
+          </button>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => onNavigate('/')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#94a3b8',
+              fontSize: '0.825rem',
+              cursor: 'pointer'
+            }}
+          >
+            ← Return to Student Campus Marketplace
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboardPage({ onNavigate }) {
   const { user, isAdmin, openAuthModal } = useAuth();
@@ -15,6 +257,8 @@ export default function AdminDashboardPage({ onNavigate }) {
   const [pendingProducts, setPendingProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [usersList, setUsersList] = useState([]);
+  const [verificationsList, setVerificationsList] = useState([]);
+  const [verificationFilter, setVerificationFilter] = useState('pending');
   const [ordersList, setOrdersList] = useState([]);
   const [rentalsList, setRentalsList] = useState([]);
   const [reportsList, setReportsList] = useState([]);
@@ -32,16 +276,9 @@ export default function AdminDashboardPage({ onNavigate }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      openAuthModal('login');
-      return;
+    if (user && isAdmin) {
+      loadAdminData();
     }
-    if (!isAdmin) {
-      alert('Access restricted to CampusMarket administrators.');
-      onNavigate('/');
-      return;
-    }
-    loadAdminData();
   }, [user, isAdmin, activeTab]);
 
   const loadAdminData = async () => {
@@ -54,6 +291,10 @@ export default function AdminDashboardPage({ onNavigate }) {
       if (activeTab === 'overview' || activeTab === 'moderation') {
         const prodRes = await api.getAdminProducts({ status: 'pending_approval' });
         setPendingProducts(prodRes.products || []);
+      }
+      if (activeTab === 'overview' || activeTab === 'verifications') {
+        const verifRes = await api.getAdminVerifications();
+        setVerificationsList(verifRes.students || []);
       }
       if (activeTab === 'products') {
         const allRes = await api.getAdminProducts({ status: 'all' });
@@ -83,6 +324,20 @@ export default function AdminDashboardPage({ onNavigate }) {
       console.error('Error fetching admin data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyStudent = async (studentId, status, reason = '') => {
+    try {
+      await api.verifyStudent(studentId, { verification_status: status, reason });
+      setVerificationsList(prev => prev.map(s => s.id === studentId ? { ...s, verification_status: status, verification_reason: reason } : s));
+      setUsersList(prev => prev.map(u => u.id === studentId ? { ...u, verification_status: status, verification_reason: reason } : u));
+      if (stats) {
+        const remainingPending = verificationsList.filter(s => s.id !== studentId && s.verification_status === 'pending').length;
+        setStats(prev => ({ ...prev, pendingVerifications: remainingPending }));
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to update student verification status');
     }
   };
 
@@ -170,7 +425,15 @@ export default function AdminDashboardPage({ onNavigate }) {
     }).format(val || 0);
   };
 
-  if (!isAdmin) return null;
+  if (!user || !isAdmin) {
+    return (
+      <AdminLoginPortal 
+        user={user} 
+        onNavigate={onNavigate} 
+        onAdminSuccess={loadAdminData} 
+      />
+    );
+  }
 
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
@@ -231,6 +494,27 @@ export default function AdminDashboardPage({ onNavigate }) {
                 borderRadius: 'var(--radius-full)'
               }}>
                 {stats.pendingApprovals}
+              </span>
+            )}
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('verifications')}
+            className={`dash-nav-item ${activeTab === 'verifications' ? 'active' : ''}`}
+            style={{ position: 'relative' }}
+          >
+            <ShieldCheck size={18} /> Student Verifications
+            {stats?.pendingVerifications > 0 && (
+              <span style={{
+                marginLeft: 'auto',
+                background: '#059669',
+                color: '#fff',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                padding: '2px 7px',
+                borderRadius: 'var(--radius-full)'
+              }}>
+                {stats.pendingVerifications}
               </span>
             )}
           </button>
@@ -299,6 +583,16 @@ export default function AdminDashboardPage({ onNavigate }) {
                     <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '0.25rem' }}>{stats.totalUsers}</div>
                   </div>
 
+                  <div 
+                    onClick={() => setActiveTab('verifications')}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', cursor: 'pointer' }}
+                  >
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>PENDING VERIFICATIONS</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#059669', marginTop: '0.25rem' }}>
+                      {stats.pendingVerifications || 0}
+                    </div>
+                  </div>
+
                   <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>LIVE LISTINGS</div>
                     <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)', marginTop: '0.25rem' }}>{stats.totalListings}</div>
@@ -313,6 +607,33 @@ export default function AdminDashboardPage({ onNavigate }) {
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>MARKETPLACE VOLUME</div>
                     <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '0.25rem' }}>{formatPrice(stats.marketplaceVolume)}</div>
                   </div>
+                </div>
+              )}
+
+              {/* Pending Student Verifications Alert */}
+              {stats?.pendingVerifications > 0 && (
+                <div style={{
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '1.25rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', color: '#047857', margin: 0 }}>
+                      🎓 {stats.pendingVerifications} Student Account(s) Awaiting Identity & College Verification
+                    </h3>
+                    <button 
+                      onClick={() => setActiveTab('verifications')} 
+                      className="btn btn-primary btn-sm" 
+                      style={{ background: '#059669', borderColor: '#059669' }}
+                    >
+                      Review Student Verifications →
+                    </button>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: '#065f46', margin: 0 }}>
+                    Newly registered students have joined CampusMarket. Review their college details, name, and face photo to approve their official student status.
+                  </p>
                 </div>
               )}
 
@@ -416,6 +737,204 @@ export default function AdminDashboardPage({ onNavigate }) {
             </div>
           )}
 
+          {/* TAB 2B: STUDENT VERIFICATIONS & IDENTITY APPROVAL */}
+          {activeTab === 'verifications' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.35rem', margin: 0 }}>Student Identity & College Verifications</h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
+                    Review newly registered student accounts, verify their college details & photo, and accept them onto CampusMarket.
+                  </p>
+                </div>
+
+                {/* Filter Pills */}
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => setVerificationFilter('pending')}
+                    className={`btn btn-sm ${verificationFilter === 'pending' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={verificationFilter === 'pending' ? { background: '#059669', borderColor: '#059669' } : {}}
+                  >
+                    Pending Review ({verificationsList.filter(s => s.verification_status === 'pending').length})
+                  </button>
+                  <button
+                    onClick={() => setVerificationFilter('verified')}
+                    className={`btn btn-sm ${verificationFilter === 'verified' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={verificationFilter === 'verified' ? { background: '#059669', borderColor: '#059669' } : {}}
+                  >
+                    Verified ({verificationsList.filter(s => s.verification_status === 'verified').length})
+                  </button>
+                  <button
+                    onClick={() => setVerificationFilter('all')}
+                    className={`btn btn-sm ${verificationFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={verificationFilter === 'all' ? { background: '#059669', borderColor: '#059669' } : {}}
+                  >
+                    All Students ({verificationsList.length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Student Verification Cards */}
+              {(() => {
+                const list = verificationsList.filter(s => {
+                  if (verificationFilter === 'pending') return s.verification_status === 'pending';
+                  if (verificationFilter === 'verified') return s.verification_status === 'verified';
+                  return true;
+                });
+
+                if (list.length === 0) {
+                  return (
+                    <div style={{
+                      padding: '3.5rem 1rem',
+                      textAlign: 'center',
+                      background: 'var(--surface)',
+                      borderRadius: 'var(--radius-lg)',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <ShieldCheck size={48} color="#059669" style={{ opacity: 0.6, margin: '0 auto 0.75rem auto' }} />
+                      <h3 style={{ margin: '0 0 0.4rem 0' }}>No student accounts in this queue</h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
+                        {verificationFilter === 'pending' ? 'All student registrations have been reviewed and verified!' : 'No student accounts match the selected filter.'}
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {list.map(student => (
+                      <div
+                        key={student.id}
+                        style={{
+                          background: 'var(--surface)',
+                          border: student.verification_status === 'pending' ? '2px solid #f59e0b' : '1px solid var(--border)',
+                          borderRadius: 'var(--radius-lg)',
+                          padding: '1.25rem',
+                          display: 'grid',
+                          gridTemplateColumns: 'auto 1fr auto',
+                          gap: '1.25rem',
+                          alignItems: 'center'
+                        }}
+                      >
+                        {/* Student Photo / Face Avatar */}
+                        <div style={{ textAlign: 'center' }}>
+                          <img
+                            src={student.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(student.name)}`}
+                            alt={student.name}
+                            style={{
+                              width: '70px',
+                              height: '70px',
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              border: '2px solid var(--border)',
+                              boxShadow: 'var(--shadow-sm)'
+                            }}
+                          />
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontWeight: 600 }}>
+                            ID #{student.id}
+                          </div>
+                        </div>
+
+                        {/* Student Details */}
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                              {student.name}
+                            </span>
+                            <span className={`badge ${
+                              student.verification_status === 'verified' ? 'badge-sell' :
+                              student.verification_status === 'pending' ? 'badge-warning' : 'badge-danger'
+                            }`}>
+                              {student.verification_status === 'verified' ? '✓ Verified Student' :
+                               student.verification_status === 'pending' ? '⏳ Pending Admin Review' : '✕ Verification Rejected'}
+                            </span>
+                            {student.status === 'suspended' && (
+                              <span className="badge badge-danger">Suspended</span>
+                            )}
+                          </div>
+
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                            <div>🎓 <strong>College:</strong> {student.college || 'Not specified'}</div>
+                            <div>📚 <strong>Course:</strong> {student.course || '—'} {student.branch ? `• ${student.branch}` : ''} {student.semester ? `• Semester ${student.semester}` : ''}</div>
+                            <div style={{ display: 'flex', gap: '1.25rem', marginTop: '0.35rem', fontSize: '0.8rem', flexWrap: 'wrap' }}>
+                              <span>✉️ {student.email}</span>
+                              {student.phone && <span>📞 {student.phone}</span>}
+                              <span>📍 {student.location || 'Campus'}</span>
+                              <span>📅 Joined: {new Date(student.created_at).toLocaleDateString()}</span>
+                            </div>
+                            {student.verification_reason && (
+                              <div style={{ marginTop: '0.4rem', fontSize: '0.775rem', color: 'var(--danger)', background: '#fef2f2', padding: '0.25rem 0.5rem', borderRadius: '4px', display: 'inline-block' }}>
+                                <strong>Admin Note:</strong> {student.verification_reason}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '160px' }}>
+                          {student.verification_status !== 'verified' && (
+                            <button
+                              onClick={() => handleVerifyStudent(student.id, 'verified')}
+                              className="btn btn-primary btn-sm"
+                              style={{ gap: '0.4rem', justifyContent: 'center', background: '#059669', borderColor: '#059669' }}
+                            >
+                              <CheckCircle2 size={15} />
+                              Accept & Verify
+                            </button>
+                          )}
+
+                          {student.verification_status === 'verified' && (
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.35rem',
+                              fontSize: '0.8rem',
+                              color: '#059669',
+                              fontWeight: 700,
+                              padding: '0.45rem',
+                              background: '#ecfdf5',
+                              borderRadius: 'var(--radius-md)',
+                              border: '1px solid #a7f3d0'
+                            }}>
+                              <CheckCircle2 size={16} /> Verified Active
+                            </div>
+                          )}
+
+                          {student.verification_status !== 'rejected' && (
+                            <button
+                              onClick={() => {
+                                const reason = window.prompt('Specify reason for rejecting or requesting student college ID card:', 'Please update your college name or provide student ID');
+                                if (reason) handleVerifyStudent(student.id, 'rejected', reason);
+                              }}
+                              className="btn btn-secondary btn-sm"
+                              style={{ gap: '0.4rem', justifyContent: 'center' }}
+                            >
+                              <XCircle size={15} />
+                              Reject / Request ID
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleToggleUserStatus(student.id, student.status === 'active' ? 'suspended' : 'active')}
+                            className="btn btn-secondary btn-sm"
+                            style={{
+                              fontSize: '0.75rem',
+                              color: student.status === 'active' ? 'var(--danger)' : 'var(--primary)',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            {student.status === 'active' ? 'Suspend Account' : 'Reactivate Account'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           {/* TAB 3: ALL PRODUCTS */}
           {activeTab === 'products' && (
             <div>
@@ -472,6 +991,7 @@ export default function AdminDashboardPage({ onNavigate }) {
                       <th>Student</th>
                       <th>Email / Phone</th>
                       <th>College</th>
+                      <th>Verification</th>
                       <th>Listings</th>
                       <th>Status</th>
                       <th>Action</th>
@@ -480,9 +1000,27 @@ export default function AdminDashboardPage({ onNavigate }) {
                   <tbody>
                     {usersList.map(u => (
                       <tr key={u.id}>
-                        <td style={{ fontWeight: 600 }}>{u.name}</td>
+                        <td style={{ fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <img 
+                              src={u.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.name)}`}
+                              alt=""
+                              style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }}
+                            />
+                            <span>{u.name}</span>
+                          </div>
+                        </td>
                         <td style={{ fontSize: '0.8rem' }}>{u.email}<br />{u.phone || '—'}</td>
                         <td style={{ fontSize: '0.8rem' }}>{u.college || '—'}</td>
+                        <td>
+                          <span className={`badge ${
+                            u.verification_status === 'verified' ? 'badge-sell' :
+                            u.verification_status === 'pending' ? 'badge-warning' : 'badge-danger'
+                          }`}>
+                            {u.verification_status === 'verified' ? '✓ Verified' :
+                             u.verification_status === 'pending' ? '⏳ Pending' : '✕ Rejected'}
+                          </span>
+                        </td>
                         <td>{u.listing_count || 0}</td>
                         <td>
                           <span className={u.status === 'active' ? 'badge badge-sell' : 'badge badge-danger'}>
@@ -490,13 +1028,25 @@ export default function AdminDashboardPage({ onNavigate }) {
                           </span>
                         </td>
                         <td>
-                          <button 
-                            onClick={() => handleToggleUserStatus(u.id, u.status)}
-                            className={`btn btn-sm ${u.status === 'active' ? 'btn-secondary' : 'btn-primary'}`}
-                            style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
-                          >
-                            {u.status === 'active' ? 'Suspend' : 'Activate'}
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            {u.verification_status !== 'verified' && (
+                              <button
+                                onClick={() => handleVerifyStudent(u.id, 'verified')}
+                                className="btn btn-sm"
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: '#059669', color: '#fff', border: 'none' }}
+                                title="Approve Student Verification"
+                              >
+                                Verify
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => handleToggleUserStatus(u.id, u.status)}
+                              className={`btn btn-sm ${u.status === 'active' ? 'btn-secondary' : 'btn-primary'}`}
+                              style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                            >
+                              {u.status === 'active' ? 'Suspend' : 'Activate'}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

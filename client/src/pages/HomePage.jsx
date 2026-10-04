@@ -6,9 +6,11 @@ import {
   PenTool, Briefcase, Shirt, Cpu, Trophy
 } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import ProductCard from '../components/ProductCard';
 
 export default function HomePage({ onNavigate }) {
+  const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [popularProducts, setPopularProducts] = useState([]);
   const [recentProducts, setRecentProducts] = useState([]);
@@ -125,6 +127,77 @@ export default function HomePage({ onNavigate }) {
           </div>
         </div>
       </section>
+
+      {/* Active Student Member Bar */}
+      {user && (
+        <section style={{ background: 'var(--surface-alt)', borderBottom: '1px solid var(--border)', padding: '1rem 0' }}>
+          <div className="container">
+            <div style={{
+              background: '#fff',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              boxShadow: 'var(--shadow-sm)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                <img
+                  src={user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`}
+                  alt=""
+                  style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
+                />
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-main)' }}>
+                      Welcome back, {user.name}!
+                    </span>
+                    <span className={`badge ${
+                      user.verification_status === 'verified' ? 'badge-sell' :
+                      user.verification_status === 'pending' ? 'badge-warning' : 'badge-danger'
+                    }`} style={{ fontSize: '0.7rem' }}>
+                      {user.verification_status === 'verified' ? '✓ Verified Student' :
+                       user.verification_status === 'pending' ? '⏳ Verification Pending' : '✕ Needs Review'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    🎓 {user.college || 'Campus Member'} {user.course ? `• ${user.course}` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => onNavigate('/dashboard')}
+                  className="btn btn-primary btn-sm"
+                  style={{ gap: '0.35rem' }}
+                >
+                  <Layers size={14} /> My Student Dashboard
+                </button>
+                <button
+                  onClick={() => onNavigate('/sell')}
+                  className="btn btn-accent btn-sm"
+                  style={{ gap: '0.35rem' }}
+                >
+                  <PlusCircle size={14} /> Post an Item
+                </button>
+                {user.role === 'admin' && (
+                  <button
+                    onClick={() => onNavigate('/admin')}
+                    className="btn btn-secondary btn-sm"
+                    style={{ gap: '0.35rem', borderColor: 'var(--primary)', color: 'var(--primary)', fontWeight: 700 }}
+                  >
+                    <ShieldCheck size={14} /> Moderator Console
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 2. EXPLORE CAMPUS ESSENTIALS (CATEGORIES) */}
       <section style={{ padding: '3.5rem 0' }}>

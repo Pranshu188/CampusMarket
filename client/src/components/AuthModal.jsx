@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Lock, Mail, Phone, User, Building, BookOpen, Shield, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function AuthModal() {
+export default function AuthModal({ onNavigate }) {
   const { isAuthModalOpen, authModalMode, setAuthModalMode, closeAuthModal, login, register, sendOtp, verifyOtp, googleLogin } = useAuth();
   const [authMethod, setAuthMethod] = useState('email'); // 'email', 'otp'
   
@@ -30,25 +30,37 @@ export default function AuthModal() {
 
   if (!isAuthModalOpen) return null;
 
+  const navigateToDashboardIfNeeded = (isNewReg = false) => {
+    if (onNavigate) {
+      if (isNewReg) {
+        onNavigate('/dashboard', { newRegistration: 'true' });
+      } else if (!window.location.pathname || window.location.pathname === '/') {
+        onNavigate('/dashboard');
+      }
+    }
+  };
+
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
       if (authModalMode === 'login') {
-        await login(email, password);
+        await login(email.trim(), password);
+        navigateToDashboardIfNeeded(false);
       } else {
         await register({
-          name,
-          email,
+          name: name.trim(),
+          email: email.trim(),
           password,
-          phone,
-          college,
-          course,
-          branch,
-          semester: parseInt(semester),
-          location
+          phone: phone.trim(),
+          college: college.trim() || 'College Campus',
+          course: course.trim(),
+          branch: branch.trim(),
+          semester: parseInt(semester) || 1,
+          location: location.trim() || 'Campus'
         });
+        navigateToDashboardIfNeeded(true);
       }
     } catch (err) {
       setError(err.message);
@@ -81,6 +93,7 @@ export default function AuthModal() {
     setLoading(true);
     try {
       await verifyOtp({ phone: otpPhone, otp: otpCode, name: name || undefined });
+      navigateToDashboardIfNeeded(false);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -97,6 +110,7 @@ export default function AuthModal() {
         name: 'Google Verified Student',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
       });
+      navigateToDashboardIfNeeded(false);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -104,18 +118,17 @@ export default function AuthModal() {
     }
   };
 
-  // Demo 1-Click test logins
+  // Demo 1-Click test logins for students
   const handleQuickLogin = async (role) => {
     setError('');
     setLoading(true);
     try {
-      if (role === 'admin') {
-        await login('admin@campusmarket.com', 'admin123');
-      } else if (role === 'aarav') {
+      if (role === 'aarav') {
         await login('aarav.patel@gtu.ac.in', 'campus123');
       } else if (role === 'priya') {
         await login('priya.sharma@bba.gtu.ac.in', 'campus123');
       }
+      navigateToDashboardIfNeeded(false);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -161,30 +174,22 @@ export default function AuthModal() {
           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
             ⚡ Instant Demo Logins (For Testing)
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
             <button 
               type="button" 
               onClick={() => handleQuickLogin('aarav')}
               className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '0.35rem 0.2rem' }}
+              style={{ fontSize: '0.75rem', padding: '0.4rem 0.2rem' }}
             >
-              Aarav (Engg)
+              Aarav (Student - Engg)
             </button>
             <button 
               type="button" 
               onClick={() => handleQuickLogin('priya')}
               className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '0.35rem 0.2rem' }}
+              style={{ fontSize: '0.75rem', padding: '0.4rem 0.2rem' }}
             >
-              Priya (BBA)
-            </button>
-            <button 
-              type="button" 
-              onClick={() => handleQuickLogin('admin')}
-              className="btn btn-primary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '0.35rem 0.2rem' }}
-            >
-              Admin Moderator
+              Priya (Student - BBA)
             </button>
           </div>
         </div>
@@ -509,6 +514,36 @@ export default function AuthModal() {
               </button>
             </>
           )}
+        </div>
+
+        {/* Dedicated Admin Portal Link */}
+        <div style={{
+          marginTop: '1.25rem',
+          paddingTop: '0.85rem',
+          borderTop: '1px solid var(--border)',
+          textAlign: 'center',
+          fontSize: '0.8rem',
+          color: 'var(--text-muted)'
+        }}>
+          Campus Moderator or Staff?{' '}
+          <button
+            type="button"
+            onClick={() => {
+              closeAuthModal();
+              if (onNavigate) onNavigate('/admin/login');
+            }}
+            style={{
+              color: 'var(--primary)',
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            <Shield size={13} />
+            Go to Admin Login Portal →
+          </button>
         </div>
       </div>
     </div>

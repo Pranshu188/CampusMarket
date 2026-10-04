@@ -240,6 +240,17 @@ function initDatabase() {
     );
   `);
 
+  // Safe migrations for student verification columns
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN verification_status TEXT DEFAULT 'verified'");
+  } catch (e) {}
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN id_card_image TEXT DEFAULT ''");
+  } catch (e) {}
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN verification_reason TEXT DEFAULT ''");
+  } catch (e) {}
+
   // Seed default settings if not exists
   const existingApproval = db.prepare('SELECT value FROM settings WHERE key = ?').get('require_approval');
   if (!existingApproval) {

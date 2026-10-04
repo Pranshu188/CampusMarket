@@ -131,7 +131,7 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         padding: '1.5rem',
-        marginBottom: '2rem',
+        marginBottom: '1.5rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -140,14 +140,23 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <img 
-            src={user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`} 
+            src={user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`} 
             alt={user.name} 
-            style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }}
+            style={{ width: '58px', height: '58px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
           />
           <div>
-            <h1 style={{ fontSize: '1.45rem', marginBottom: '0.2rem' }}>{user.name}</h1>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              {user.college || 'Student Member'} {user.course ? `• ${user.course}` : ''} {user.semester ? `• Sem ${user.semester}` : ''}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: '1.45rem', margin: 0 }}>{user.name}</h1>
+              <span className={`badge ${
+                user.verification_status === 'verified' ? 'badge-sell' :
+                user.verification_status === 'pending' ? 'badge-warning' : 'badge-danger'
+              }`} style={{ fontSize: '0.75rem' }}>
+                {user.verification_status === 'verified' ? '✓ Verified Campus Student' :
+                 user.verification_status === 'pending' ? '⏳ Verification Pending Review' : '✕ Verification Needs Attention'}
+              </span>
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              {user.college || 'Student Member'} {user.course ? `• ${user.course}` : ''} {user.semester ? `• Sem ${user.semester}` : ''} • {user.email}
             </div>
           </div>
         </div>
@@ -160,6 +169,77 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
           <PlusCircle size={16} /> List an Item
         </button>
       </div>
+
+      {/* Account Verification Status Banner */}
+      {user.verification_status === 'pending' && (
+        <div style={{
+          background: '#fffbeb',
+          border: '1px solid #fde68a',
+          borderRadius: 'var(--radius-lg)',
+          padding: '1.15rem 1.25rem',
+          marginBottom: '1.75rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{
+            width: '42px',
+            height: '42px',
+            borderRadius: '50%',
+            background: '#fef3c7',
+            color: '#d97706',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Clock size={22} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#92400e', marginBottom: '0.2rem' }}>
+              ⏳ Student Identity Verification In Progress
+            </div>
+            <div style={{ fontSize: '0.85rem', color: '#b45309' }}>
+              Your student profile for <strong>{user.college || 'your college'}</strong> has been created. The campus administrator reviews new registrations to maintain campus integrity. You can already explore the marketplace, save items, and list books.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {user.verification_status === 'verified' && (
+        <div style={{
+          background: '#ecfdf5',
+          border: '1px solid #a7f3d0',
+          borderRadius: 'var(--radius-lg)',
+          padding: '0.9rem 1.25rem',
+          marginBottom: '1.75rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: '#d1fae5',
+            color: '#059669',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <CheckCircle size={20} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#065f46' }}>
+              ✓ Verified Campus Student Member
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#047857' }}>
+              Your identity at <strong>{user.college || 'College Campus'}</strong> is verified. All your listings receive the trusted student badge!
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="dashboard-layout">
         {/* SIDEBAR NAVIGATION */}

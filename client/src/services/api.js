@@ -129,6 +129,11 @@ export const api = {
     const query = new URLSearchParams(params);
     return request(`/admin/users?${query.toString()}`);
   },
+  getAdminVerifications: (params = {}) => {
+    const query = new URLSearchParams(params);
+    return request(`/admin/verifications?${query.toString()}`);
+  },
+  verifyStudent: (id, data) => request(`/admin/users/${id}/verify`, { method: 'PATCH', body: JSON.stringify(data) }),
   updateUserStatus: (id, status) => request(`/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   getAdminOrders: () => request('/admin/orders'),
   getAdminRentals: () => request('/admin/rentals'),

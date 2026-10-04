@@ -10,6 +10,7 @@ router.use(requireAdmin);
 router.get('/stats', (req, res) => {
   try {
     const totalUsers = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'student'").get().count;
+    const pendingVerifications = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'student' AND verification_status = 'pending'").get().count;
     const totalListings = db.prepare("SELECT COUNT(*) as count FROM products WHERE status = 'active'").get().count;
     const pendingApprovals = db.prepare("SELECT COUNT(*) as count FROM products WHERE status = 'pending_approval'").get().count;
     const totalOrders = db.prepare('SELECT COUNT(*) as count FROM orders').get().count;
@@ -27,6 +28,7 @@ router.get('/stats', (req, res) => {
     res.json({
       stats: {
         totalUsers,
+        pendingVerifications,
         totalListings,
         pendingApprovals,
         totalOrders,
@@ -161,7 +163,7 @@ router.get('/users', (req, res) => {
 
     const where = `WHERE ${conditions.join(' AND ')}`;
     const users = db.prepare(`
-      SELECT id, name, email, phone, college, course, branch, semester, location, status, created_at,
+      SELECT id, name, email, phone, college, course, branch, semester, location, avatar, status, verification_status, id_card_image, verification_reason, created_at,
              (SELECT COUNT(*) FROM products WHERE seller_id = users.id) as listing_count,
              (SELECT COUNT(*) FROM orders WHERE buyer_id = users.id) as order_count
       FROM users
@@ -173,6 +175,75 @@ router.get('/users', (req, res) => {
   } catch (error) {
     console.error('Admin users error:', error);
     res.status(500).json({ error: 'Failed to fetch users.' });
+  }
+});
+
+// 5b. GET /api/admin/verifications — Student identity & college verification queue
+router.get('/verifications', (req, res) => {
+  try {
+    const { status = 'all' } = req.query;
+    let conditions = ["role = 'student'"];
+    let params = [];
+
+    if (status && status !== 'all') {
+      conditions.push('verification_status = ?');
+      params.push(status);
+    }
+
+    const where = `WHERE ${conditions.join(' AND ')}`;
+    const students = db.prepare(`
+      SELECT id, name, email, phone, college, course, branch, semester, location, avatar, status, verification_status, id_card_image, verification_reason, created_at,
+             (SELECT COUNT(*) FROM products WHERE seller_id = users.id) as listing_count
+      FROM users
+      ${where}
+      ORDER BY CASE WHEN verification_status = 'pending' THEN 0 ELSE 1 END, created_at DESC
+    `).all(...params);
+
+    res.json({ students });
+  } catch (error) {
+    console.error('Admin verifications error:', error);
+    res.status(500).json({ error: 'Failed to fetch student verifications.' });
+  }
+});
+
+// 5c. PATCH /api/admin/users/:id/verify — Accept & verify or reject student identity
+router.patch('/users/:id/verify', (req, res) => {
+  try {
+    const id = req.params.id;
+    const { verification_status, reason } = req.body; // 'verified', 'rejected', 'pending'
+
+    if (!['verified', 'rejected', 'pending'].includes(verification_status)) {
+      return res.status(400).json({ error: 'Invalid verification status.' });
+    }
+
+    const user = db.prepare('SELECT id, name, email, college FROM users WHERE id = ?').get(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+
+    db.prepare('UPDATE users SET verification_status = ?, verification_reason = ? WHERE id = ?')
+      .run(verification_status, reason || null, id);
+
+    // Send student in-app notification
+    const title = verification_status === 'verified'
+      ? '🎉 Account Verified by Campus Admin!'
+      : '⚠️ College Verification Notice';
+    const message = verification_status === 'verified'
+      ? 'Your student account has been reviewed and verified! You now have the official Verified Student badge.'
+      : (reason || 'Your college verification needs additional proof. Please contact admin or update your profile.');
+
+    db.prepare(`
+      INSERT INTO notifications (user_id, title, message, type, link)
+      VALUES (?, ?, ?, 'approval', '/dashboard')
+    `).run(id, title, message);
+
+    res.json({ 
+      message: `Student account marked as ${verification_status}.`,
+      verification_status 
+    });
+  } catch (error) {
+    console.error('Verify user error:', error);
+    res.status(500).json({ error: 'Failed to update student verification status.' });
   }
 });
 

@@ -140,7 +140,7 @@ function MainApp() {
       />
 
       {/* Global Auth Modal */}
-      <AuthModal />
+      <AuthModal onNavigate={handleNavigate} />
     </div>
   );
 }

@@ -391,10 +391,20 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
                         <div>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Order ID: </span>
                           <strong style={{ fontSize: '0.85rem' }}>{order.order_number}</strong>
+                          {order.transaction_id && order.transaction_id !== 'HANDOVER-PENDING' && (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+                              (Txn: <code>{order.transaction_id}</code>)
+                            </span>
+                          )}
                         </div>
-                        <span className="badge badge-sell" style={{ textTransform: 'capitalize' }}>
-                          Status: {order.order_status}
-                        </span>
+                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                          <span className={`badge ${order.payment_status === 'paid' ? 'badge-sell' : 'badge-warning'}`}>
+                            {order.payment_status === 'paid' ? '✓ Paid Online' : '⏳ Pay on Handover'}
+                          </span>
+                          <span className="badge badge-accent" style={{ textTransform: 'capitalize' }}>
+                            {order.order_status}
+                          </span>
+                        </div>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -408,8 +418,11 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                             Seller: <strong>{order.seller_name}</strong> ({order.seller_college || 'Student'})
                           </div>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', marginTop: '0.2rem' }}>
-                            Amount Paid: {formatPrice(order.amount)}
+                          <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                            Method: <strong>{order.payment_method || 'UPI / SafePay'}</strong>
+                          </div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: order.payment_status === 'paid' ? 'var(--primary)' : 'var(--warning)', marginTop: '0.25rem' }}>
+                            {order.payment_status === 'paid' ? `Amount Paid: ${formatPrice(order.amount)}` : `To Pay at Handover: ${formatPrice(order.amount)}`}
                           </div>
                         </div>
 
@@ -486,10 +499,20 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
                         <div>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rental ID: </span>
                           <strong style={{ fontSize: '0.85rem' }}>{rnt.rental_number}</strong>
+                          {rnt.transaction_id && rnt.transaction_id !== 'HANDOVER-PENDING' && (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+                              (Txn: <code>{rnt.transaction_id}</code>)
+                            </span>
+                          )}
                         </div>
-                        <span className="badge badge-rent" style={{ textTransform: 'capitalize' }}>
-                          Status: {rnt.rental_status}
-                        </span>
+                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                          <span className={`badge ${rnt.payment_status === 'paid' ? 'badge-sell' : 'badge-warning'}`}>
+                            {rnt.payment_status === 'paid' ? '✓ Paid Online' : '⏳ Pay on Handover'}
+                          </span>
+                          <span className="badge badge-rent" style={{ textTransform: 'capitalize' }}>
+                            {rnt.rental_status}
+                          </span>
+                        </div>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -502,6 +525,9 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
                           <h4 style={{ fontSize: '0.95rem', marginBottom: '0.2rem' }}>{rnt.product_title}</h4>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                             Owner: <strong>{rnt.owner_name}</strong> • Duration: {rnt.duration_months} month(s)
+                          </div>
+                          <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                            Method: <strong>{rnt.payment_method || 'UPI / SafePay'}</strong>
                           </div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--primary)', marginTop: '0.2rem' }}>
                             Active until <strong>{rnt.end_date}</strong> • Deposit Held: {formatPrice(rnt.security_deposit)}

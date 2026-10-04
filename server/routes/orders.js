@@ -6,7 +6,13 @@ const { requireAuth } = require('../middleware/auth');
 // 1. POST /api/orders — Create Order (Buy Now)
 router.post('/', requireAuth, (req, res) => {
   try {
-    const { product_id, payment_method = 'Razorpay Test Sandbox / UPI', pickup_notes } = req.body;
+    const { 
+      product_id, 
+      payment_method = 'UPI / CampusPay', 
+      payment_status = 'paid',
+      transaction_id = '',
+      pickup_notes 
+    } = req.body;
 
     if (!product_id) {
       return res.status(400).json({ error: 'Product ID is required.' });
@@ -25,11 +31,16 @@ router.post('/', requireAuth, (req, res) => {
       return res.status(400).json({ error: 'This item is no longer available.' });
     }
 
+    const isHandover = payment_status === 'pending_pickup' || payment_method.toLowerCase().includes('handover');
+    const actualPaymentStatus = isHandover ? 'pending_pickup' : 'paid';
+    const actualOrderStatus = isHandover ? 'pending_pickup' : 'confirmed';
+    const actualTxnId = transaction_id || (isHandover ? 'HANDOVER-PENDING' : `pay_cm_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
+
     const orderNumber = `CM-ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const insertOrder = db.prepare(`
-      INSERT INTO orders (order_number, product_id, buyer_id, seller_id, amount, payment_method, payment_status, order_status, pickup_notes)
-      VALUES (?, ?, ?, ?, ?, ?, 'paid', 'confirmed', ?)
+      INSERT INTO orders (order_number, product_id, buyer_id, seller_id, amount, payment_method, payment_status, order_status, pickup_notes, transaction_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = insertOrder.run(
@@ -39,7 +50,10 @@ router.post('/', requireAuth, (req, res) => {
       product.seller_id,
       product.price,
       payment_method,
-      pickup_notes || 'Pickup arranged on campus via CampusMarket chat'
+      actualPaymentStatus,
+      actualOrderStatus,
+      pickup_notes || 'Pickup arranged on campus via CampusMarket chat',
+      actualTxnId
     );
 
     // Update product availability to 'sold'
@@ -48,19 +62,25 @@ router.post('/', requireAuth, (req, res) => {
     // Send notification to Seller
     db.prepare(`
       INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, 'Item Sold!', ?, 'order', '/dashboard?tab=orders')
+      VALUES (?, ?, ?, 'order', '/dashboard?tab=orders')
     `).run(
       product.seller_id,
-      `${req.user.name} bought "${product.title}" for ₹${product.price}. Please check your orders and arrange campus pickup.`
+      isHandover ? 'New Order (Pay on Handover)' : 'Item Sold & Paid!',
+      isHandover
+        ? `${req.user.name} ordered "${product.title}" for ₹${product.price} (Pay on Campus Handover). Coordinate meetup in chat to hand over item and collect payment.`
+        : `${req.user.name} bought "${product.title}" for ₹${product.price}. Payment verified (${payment_method}, Ref: ${actualTxnId}). Please coordinate campus handover.`
     );
 
     // Send notification to Buyer
     db.prepare(`
       INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, 'Order Confirmed!', ?, 'order', '/dashboard?tab=orders')
+      VALUES (?, ?, ?, 'order', '/dashboard?tab=orders')
     `).run(
       req.user.id,
-      `Your order for "${product.title}" is confirmed! Connect with seller in chat to coordinate pickup.`
+      isHandover ? 'Order Placed (Pay at Meetup)' : 'Order & Payment Confirmed!',
+      isHandover
+        ? `Your order for "${product.title}" is reserved! Meet seller on campus to inspect item and pay ₹${product.price}.`
+        : `Your payment of ₹${product.price} for "${product.title}" was verified (Ref: ${actualTxnId}). Connect with seller to coordinate pickup.`
     );
 
     const order = db.prepare(`
@@ -150,7 +170,11 @@ router.patch('/:id/status', requireAuth, (req, res) => {
       return res.status(403).json({ error: 'Not authorized to modify this order.' });
     }
 
-    db.prepare('UPDATE orders SET order_status = ? WHERE id = ?').run(status, id);
+    if (status === 'completed') {
+      db.prepare("UPDATE orders SET order_status = 'completed', payment_status = 'paid' WHERE id = ?").run(id);
+    } else {
+      db.prepare('UPDATE orders SET order_status = ? WHERE id = ?').run(status, id);
+    }
 
     // If cancelled, make product available again
     if (status === 'cancelled') {

@@ -6,7 +6,15 @@ const { requireAuth } = require('../middleware/auth');
 // 1. POST /api/rentals — Create Rental Request
 router.post('/', requireAuth, (req, res) => {
   try {
-    const { product_id, duration_months = 1, start_date, pickup_notes } = req.body;
+    const { 
+      product_id, 
+      duration_months = 1, 
+      start_date, 
+      pickup_notes,
+      payment_method = 'UPI / CampusPay',
+      payment_status = 'paid',
+      transaction_id = ''
+    } = req.body;
 
     if (!product_id || !start_date) {
       return res.status(400).json({ error: 'Product and start date are required.' });
@@ -37,17 +45,22 @@ router.post('/', requireAuth, (req, res) => {
     endDateObj.setMonth(endDateObj.getMonth() + months);
     const endDateStr = endDateObj.toISOString().split('T')[0];
 
+    const isHandover = payment_status === 'pending_pickup' || payment_method.toLowerCase().includes('handover');
+    const actualPaymentStatus = isHandover ? 'pending_pickup' : 'paid';
+    const actualRentalStatus = isHandover ? 'pending_pickup' : 'active';
+    const actualTxnId = transaction_id || (isHandover ? 'HANDOVER-PENDING' : `pay_cm_rnt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
+
     const rentalNumber = `CM-RNT-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const insertRental = db.prepare(`
       INSERT INTO rentals (
         rental_number, product_id, renter_id, owner_id,
         monthly_rent, security_deposit, duration_months, total_amount,
-        start_date, end_date, payment_status, rental_status, deposit_status, pickup_notes
+        start_date, end_date, payment_method, payment_status, rental_status, deposit_status, pickup_notes, transaction_id
       ) VALUES (
         ?, ?, ?, ?,
         ?, ?, ?, ?,
-        ?, ?, 'paid', 'active', 'held', ?
+        ?, ?, ?, ?, ?, 'held', ?, ?
       )
     `);
 
@@ -62,7 +75,11 @@ router.post('/', requireAuth, (req, res) => {
       totalAmount,
       start_date,
       endDateStr,
-      pickup_notes || 'Campus handover arranged via CampusMarket chat'
+      payment_method,
+      actualPaymentStatus,
+      actualRentalStatus,
+      pickup_notes || 'Campus handover arranged via CampusMarket chat',
+      actualTxnId
     );
 
     // Update product availability to 'rented'
@@ -71,18 +88,24 @@ router.post('/', requireAuth, (req, res) => {
     // Notifications
     db.prepare(`
       INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, 'Item Rented Out!', ?, 'rental', '/dashboard?tab=rentals')
+      VALUES (?, ?, ?, 'rental', '/dashboard?tab=rentals')
     `).run(
       product.seller_id,
-      `${req.user.name} rented "${product.title}" for ${months} month(s). Security deposit ₹${deposit} held safely.`
+      isHandover ? 'New Rental Request (Pay on Handover)' : 'Item Rented Out & Paid!',
+      isHandover
+        ? `${req.user.name} rented "${product.title}" for ${months} mo (Pay on Meetup). Security deposit ₹${deposit} & rent ₹${rentTotal} to be collected at meetup.`
+        : `${req.user.name} rented "${product.title}" for ${months} month(s). Payment verified (${payment_method}, Ref: ${actualTxnId}). Security deposit ₹${deposit} held safely.`
     );
 
     db.prepare(`
       INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, 'Rental Confirmed!', ?, 'rental', '/dashboard?tab=rentals')
+      VALUES (?, ?, ?, 'rental', '/dashboard?tab=rentals')
     `).run(
       req.user.id,
-      `Your rental for "${product.title}" is active until ${endDateStr}. Contact owner to receive item.`
+      isHandover ? 'Rental Booked (Pay on Handover)' : 'Rental Confirmed!',
+      isHandover
+        ? `Your rental for "${product.title}" is booked! Meet owner on campus to pay total ₹${totalAmount} and receive item.`
+        : `Your rental for "${product.title}" is active until ${endDateStr}. Contact owner to receive item.`
     );
 
     const rental = db.prepare(`
@@ -171,7 +194,11 @@ router.patch('/:id/status', requireAuth, (req, res) => {
     }
 
     if (rental_status) {
-      db.prepare('UPDATE rentals SET rental_status = ? WHERE id = ?').run(rental_status, id);
+      if (rental_status === 'active' || rental_status === 'returned' || rental_status === 'completed') {
+        db.prepare("UPDATE rentals SET rental_status = ?, payment_status = 'paid' WHERE id = ?").run(rental_status, id);
+      } else {
+        db.prepare('UPDATE rentals SET rental_status = ? WHERE id = ?').run(rental_status, id);
+      }
 
       if (rental_status === 'returned' || rental_status === 'completed' || rental_status === 'cancelled') {
         db.prepare("UPDATE products SET availability = 'available' WHERE id = ?").run(rental.product_id);

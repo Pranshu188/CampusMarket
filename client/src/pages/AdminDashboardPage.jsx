@@ -1056,6 +1056,141 @@ export default function AdminDashboardPage({ onNavigate }) {
             </div>
           )}
 
+          {/* TAB: ORDERS MANAGEMENT */}
+          {activeTab === 'orders' && (
+            <div>
+              <h2 style={{ fontSize: '1.35rem', marginBottom: '1.25rem' }}>Campus Orders & Transactions</h2>
+              {ordersList.length > 0 ? (
+                <div className="data-table-container">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Order #</th>
+                        <th>Product</th>
+                        <th>Buyer / Seller</th>
+                        <th>Amount</th>
+                        <th>Payment Status</th>
+                        <th>Payment Method / Txn</th>
+                        <th>Order Status</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ordersList.map(ord => (
+                        <tr key={ord.id}>
+                          <td style={{ fontWeight: 700, fontSize: '0.8rem' }}>{ord.order_number}</td>
+                          <td style={{ fontWeight: 600, fontSize: '0.85rem' }}>{ord.product_title}</td>
+                          <td style={{ fontSize: '0.8rem' }}>
+                            <div>Buyer: <strong>{ord.buyer_name}</strong></div>
+                            <div style={{ color: 'var(--text-muted)' }}>Seller: {ord.seller_name}</div>
+                          </td>
+                          <td style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.85rem' }}>
+                            ₹{ord.amount}
+                          </td>
+                          <td>
+                            <span className={`badge ${ord.payment_status === 'paid' ? 'badge-sell' : 'badge-warning'}`}>
+                              {ord.payment_status === 'paid' ? '✓ Paid Online' : '⏳ Pay on Handover'}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.775rem' }}>
+                            <div>{ord.payment_method || 'UPI / Gateway'}</div>
+                            {ord.transaction_id && (
+                              <code style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                {ord.transaction_id}
+                              </code>
+                            )}
+                          </td>
+                          <td>
+                            <span className="badge badge-accent" style={{ textTransform: 'capitalize' }}>
+                              {ord.order_status}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {new Date(ord.created_at).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '3.5rem', textAlign: 'center' }}>
+                  <ShoppingBag size={36} color="var(--text-light)" style={{ margin: '0 auto 0.75rem' }} />
+                  <h3>No campus orders placed yet</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Orders will appear here as students buy items.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: RENTALS MANAGEMENT */}
+          {activeTab === 'rentals' && (
+            <div>
+              <h2 style={{ fontSize: '1.35rem', marginBottom: '1.25rem' }}>Campus Item Rentals & Deposits</h2>
+              {rentalsList.length > 0 ? (
+                <div className="data-table-container">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Rental #</th>
+                        <th>Product</th>
+                        <th>Renter / Owner</th>
+                        <th>Rent & Deposit</th>
+                        <th>Period</th>
+                        <th>Payment Status</th>
+                        <th>Payment Method / Txn</th>
+                        <th>Rental Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rentalsList.map(rnt => (
+                        <tr key={rnt.id}>
+                          <td style={{ fontWeight: 700, fontSize: '0.8rem' }}>{rnt.rental_number}</td>
+                          <td style={{ fontWeight: 600, fontSize: '0.85rem' }}>{rnt.product_title}</td>
+                          <td style={{ fontSize: '0.8rem' }}>
+                            <div>Renter: <strong>{rnt.renter_name}</strong></div>
+                            <div style={{ color: 'var(--text-muted)' }}>Owner: {rnt.owner_name}</div>
+                          </td>
+                          <td style={{ fontSize: '0.8rem' }}>
+                            <div>Rent: <strong>₹{rnt.total_amount - rnt.security_deposit}</strong></div>
+                            <div style={{ color: 'var(--primary)' }}>Deposit: ₹{rnt.security_deposit}</div>
+                          </td>
+                          <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {rnt.duration_months} mo ({rnt.start_date} to {rnt.end_date})
+                          </td>
+                          <td>
+                            <span className={`badge ${rnt.payment_status === 'paid' ? 'badge-sell' : 'badge-warning'}`}>
+                              {rnt.payment_status === 'paid' ? '✓ Paid Online' : '⏳ Pay on Handover'}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.775rem' }}>
+                            <div>{rnt.payment_method || 'UPI / Gateway'}</div>
+                            {rnt.transaction_id && (
+                              <code style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                {rnt.transaction_id}
+                              </code>
+                            )}
+                          </td>
+                          <td>
+                            <span className="badge badge-rent" style={{ textTransform: 'capitalize' }}>
+                              {rnt.rental_status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '3.5rem', textAlign: 'center' }}>
+                  <Calendar size={36} color="var(--text-light)" style={{ margin: '0 auto 0.75rem' }} />
+                  <h3>No campus rentals recorded</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Active student rentals will show up here.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* TAB 5: REPORTS */}
           {activeTab === 'reports' && (
             <div>

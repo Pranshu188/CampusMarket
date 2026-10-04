@@ -133,10 +133,11 @@ function initDatabase() {
       buyer_id INTEGER NOT NULL REFERENCES users(id),
       seller_id INTEGER NOT NULL REFERENCES users(id),
       amount REAL NOT NULL,
-      payment_method TEXT DEFAULT 'UPI / Razorpay Sandbox',
-      payment_status TEXT DEFAULT 'paid', -- 'pending', 'paid', 'refunded'
+      payment_method TEXT DEFAULT 'UPI / CampusPay',
+      payment_status TEXT DEFAULT 'paid', -- 'pending_pickup', 'paid', 'refunded'
       order_status TEXT DEFAULT 'confirmed', -- 'confirmed', 'pending_pickup', 'completed', 'cancelled'
       pickup_notes TEXT,
+      transaction_id TEXT DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -155,10 +156,12 @@ function initDatabase() {
       total_amount REAL NOT NULL,
       start_date TEXT NOT NULL,
       end_date TEXT NOT NULL,
-      payment_status TEXT DEFAULT 'paid', -- 'pending', 'paid', 'deposit_refunded'
-      rental_status TEXT DEFAULT 'active', -- 'requested', 'confirmed', 'active', 'returned', 'completed', 'cancelled'
+      payment_method TEXT DEFAULT 'UPI / CampusPay',
+      payment_status TEXT DEFAULT 'paid', -- 'pending_pickup', 'paid', 'deposit_refunded'
+      rental_status TEXT DEFAULT 'active', -- 'requested', 'confirmed', 'active', 'returned', 'completed', 'cancelled', 'pending_pickup'
       deposit_status TEXT DEFAULT 'held', -- 'held', 'refunded', 'claimed'
       pickup_notes TEXT,
+      transaction_id TEXT DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -249,6 +252,17 @@ function initDatabase() {
   } catch (e) {}
   try {
     db.exec("ALTER TABLE users ADD COLUMN verification_reason TEXT DEFAULT ''");
+  } catch (e) {}
+
+  // Safe migrations for orders & rentals payment tracking
+  try {
+    db.exec("ALTER TABLE orders ADD COLUMN transaction_id TEXT DEFAULT ''");
+  } catch (e) {}
+  try {
+    db.exec("ALTER TABLE rentals ADD COLUMN transaction_id TEXT DEFAULT ''");
+  } catch (e) {}
+  try {
+    db.exec("ALTER TABLE rentals ADD COLUMN payment_method TEXT DEFAULT 'UPI / CampusPay'");
   } catch (e) {}
 
   // Seed default settings if not exists
@@ -794,6 +808,9 @@ function seedInitialData() {
 
   console.log('CampusMarket database seeded successfully with realistic student data!');
 }
+
+// Automatically ensure schema & safe migrations are applied
+initDatabase();
 
 module.exports = {
   db,

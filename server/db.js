@@ -289,19 +289,12 @@ function initDatabase() {
     db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('admin_upi_name', 'CampusMarket Escrow Account');
   }
 
-  // Auto-prune empty categories that have no active products
-  try {
-    db.prepare("DELETE FROM categories WHERE (SELECT COUNT(*) FROM products WHERE category_name = categories.name AND status = 'active') = 0").run();
-  } catch (e) {
-    console.error('Category cleanup notice:', e.message);
-  }
-
   // Ensure Admin account exists for Shreya Rajgor and purge legacy demo accounts
+  let adminId = 1;
   try {
     const adminEmail = 'shreyarajgor5@gmail.com';
     const adminPasswordHash = bcrypt.hashSync('Shreya_@05', 10);
     const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
-    let adminId;
     if (!existingAdmin) {
       const ins = db.prepare(`
         INSERT INTO users (name, email, phone, password_hash, role, college, course, branch, semester, location, bio, avatar, verification_status, status)
@@ -312,10 +305,6 @@ function initDatabase() {
       adminId = existingAdmin.id;
       db.prepare("UPDATE users SET password_hash = ?, role = 'admin', name = 'Shreya Rajgor', college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', verification_status = 'verified', status = 'active' WHERE id = ?").run(adminPasswordHash, adminId);
     }
-
-    // Reassign products & requests to admin & standardize college
-    db.prepare("UPDATE products SET seller_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR'").run(adminId);
-    db.prepare("UPDATE requests SET user_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR'").run(adminId);
 
     // Purge legacy demo user accounts
     db.pragma('foreign_keys = OFF');
@@ -331,19 +320,12 @@ function initDatabase() {
     console.error('Admin sync notice:', e.message);
   }
 
-  // Seed database if users count is 0
-  seedInitialData();
+  // Always seed products if missing
+  seedInitialData(adminId);
 }
 
-function seedInitialData() {
-  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
-  if (userCount > 0) {
-    return; // Already seeded
-  }
-
-  console.log('Seeding initial CampusMarket database...');
-
-  // 1. Seed Categories (Only active categories with products)
+function seedInitialData(adminId = 1) {
+  // 1. Ensure categories exist
   const categories = [
     { name: 'Textbooks', slug: 'textbooks', icon: 'BookOpen', description: 'Academic books for all universities and semesters' },
     { name: 'Notes', slug: 'notes', icon: 'FileText', description: 'Handwritten notes, solved papers & question banks' },
@@ -357,365 +339,363 @@ function seedInitialData() {
   ];
 
   const insertCategory = db.prepare(`
-    INSERT INTO categories (name, slug, icon, description) VALUES (@name, @slug, @icon, @description)
+    INSERT OR IGNORE INTO categories (name, slug, icon, description, item_count) VALUES (@name, @slug, @icon, @description, 0)
   `);
   categories.forEach(cat => insertCategory.run(cat));
 
-  // 2. Seed Admin User
-  const adminPasswordHash = bcrypt.hashSync('Shreya_@05', 10);
+  const activeProductCount = db.prepare("SELECT COUNT(*) as count FROM products WHERE status = 'active'").get().count;
+  if (activeProductCount < 10) {
+    console.log('Seeding the 10 core student products for GOVERNMENT POLITECNIC COLLAGE PALANPUR...');
 
-  const insertUser = db.prepare(`
-    INSERT INTO users (name, email, phone, password_hash, role, college, course, branch, semester, location, bio, avatar, verification_status, status)
-    VALUES (@name, @email, @phone, @password_hash, @role, @college, @course, @branch, @semester, @location, @bio, @avatar, @verification_status, @status)
-  `);
+    db.pragma('foreign_keys = OFF');
+    db.prepare('DELETE FROM product_images').run();
+    db.prepare('DELETE FROM products').run();
+    db.pragma('foreign_keys = ON');
 
-  const admin = insertUser.run({
-    name: 'Shreya Rajgor',
-    email: 'shreyarajgor5@gmail.com',
-    phone: '+91 98765 43210',
-    password_hash: adminPasswordHash,
-    role: 'admin',
-    college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-    course: 'Polytechnic Engineering',
-    branch: 'All Branches',
-    semester: 0,
-    location: 'Palanpur, Gujarat',
-    bio: 'Official Platform Administrator for Government Polytechnic College Palanpur.',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Shreya%20Rajgor&backgroundColor=0f766e',
-    verification_status: 'verified',
-    status: 'active'
-  });
+    // 3. Seed Realistic Indian Student Products
+    const products = [
+      {
+        title: 'Diploma Semester 3 Financial Accounting Textbook',
+        description: 'Prescribed textbook for Financial Accounting Sem 3. Covers Company Accounts, Valuation of Goodwill, and Shares. Very neat condition, lightly underlined with pencil only. Includes solved exam papers from past 3 years at the back.',
+        category_name: 'Textbooks',
+        seller_id: Number(adminId),
+        price: 320,
+        listing_type: 'both',
+        rent_price_monthly: 100,
+        security_deposit: 300,
+        rental_terms: 'Available for semester rental. Please return without water damage or pen markings.',
+        condition: 'Good',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'Management & Commerce',
+        semester: 3,
+        subject: 'Financial Accounting',
+        edition: '5th Revised Edition',
+        author: 'Dr. P. C. Tulsian',
+        isbn: '978-9352834567',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        title: 'Higher Engineering Mathematics — B.S. Grewal (44th Edition)',
+        description: 'Essential for all engineering mathematics (Sem 1, 2 & 3). Hardcover edition. No missing pages, binding is 100% solid.',
+        category_name: 'Textbooks',
+        seller_id: Number(adminId),
+        price: 580,
+        listing_type: 'sell',
+        rent_price_monthly: 0,
+        security_deposit: 0,
+        rental_terms: '',
+        condition: 'Like New',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'All Branches (Common)',
+        semester: 1,
+        subject: 'Engineering Mathematics',
+        edition: '44th Edition',
+        author: 'Dr. B.S. Grewal',
+        isbn: '978-8193328491',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: '/uploads/bs_grewal_44th_edition.jpg'
+      },
+      {
+        title: 'Casio FX-991EX Classwiz Scientific Calculator (552 Functions)',
+        description: 'Original Casio fx-991EX Classwiz with high-resolution natural textbook display. Allowed in semester exams. Has solar backup + battery. Comes with protective slide-on hard case and user quick card.',
+        category_name: 'Calculators',
+        seller_id: Number(adminId),
+        price: 1100,
+        listing_type: 'both',
+        rent_price_monthly: 250,
+        security_deposit: 1000,
+        rental_terms: 'Great if you only need it for final exams month! Fully tested and working.',
+        condition: 'Like New',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'Engineering & Sciences',
+        semester: 2,
+        subject: 'Applied Mathematics & Statistics',
+        edition: 'FX-991EX',
+        author: 'Casio India',
+        isbn: '',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1587145820266-a5951ee6f620?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        title: 'Omega Engineering Mini Drafter + Drawing Board & Clips',
+        description: 'Complete Engineering Drawing kit including heavy-duty mini drafter with steel rod, clamp, 360-degree protractor head, 0.5mm clutch pencil, set squares, and roll-up carrying case. Perfect for 1st Year Engineering Graphics / Drawing.',
+        category_name: 'Stationery',
+        seller_id: Number(adminId),
+        price: 490,
+        listing_type: 'both',
+        rent_price_monthly: 150,
+        security_deposit: 500,
+        rental_terms: 'Can rent for the whole 1st semester. Save money compared to buying brand new at stationery shop.',
+        condition: 'Good',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'Mechanical & Civil',
+        semester: 1,
+        subject: 'Engineering Graphics & Design (EGD)',
+        edition: 'Standard Issue',
+        author: 'Omega Stationery',
+        isbn: '',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        title: '100% Cotton White Lab Coat (Size 38 / M) + Safety Goggles',
+        description: 'Required for Chemistry Lab, Biology & Material Testing practicals. Thick premium cotton fabric with 3 utility pockets. Washed and sanitized. Free transparent safety goggles included.',
+        category_name: 'Lab Equipment',
+        seller_id: Number(adminId),
+        price: 240,
+        listing_type: 'sell',
+        rent_price_monthly: 0,
+        security_deposit: 0,
+        rental_terms: '',
+        condition: 'Good',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'Chemical / Mechanical / Civil',
+        semester: 1,
+        subject: 'Engineering Chemistry & Workshop Lab',
+        edition: '',
+        author: '',
+        isbn: '',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        title: 'Arduino Uno R3 Ultimate Starter Kit (Sensors, Motors, LCD)',
+        description: 'Used for IoT / Embedded Systems mini project. Includes original Arduino Uno board, breadboard, 40+ jumper wires, ultrasonic sensor, IR sensor, 16x2 LCD display, servo motor, stepper motor, RFID reader with tags, and resistors kit in plastic organizer box.',
+        category_name: 'Project Materials',
+        seller_id: Number(adminId),
+        price: 850,
+        listing_type: 'both',
+        rent_price_monthly: 300,
+        security_deposit: 800,
+        rental_terms: 'Ideal for semester project submissions! All components tested and working.',
+        condition: 'Like New',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'Computer / IT / Electrical',
+        semester: 5,
+        subject: 'Microprocessors & IoT',
+        edition: 'Rev 3',
+        author: 'RoboCraze / Arduino',
+        isbn: '',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        title: 'Compact Wooden Study Table with Bookshelf for Hostel Room',
+        description: 'Engineered wood study desk with 2-tier overhead bookshelf and bottom footrest. Very sturdy, perfect dimensions for hostel rooms. Easily fits a laptop, monitor and open notebooks.',
+        category_name: 'Furniture',
+        seller_id: Number(adminId),
+        price: 1450,
+        listing_type: 'both',
+        rent_price_monthly: 400,
+        security_deposit: 1200,
+        rental_terms: 'Minimum 2 months rental. Buyer arranges self-pickup.',
+        condition: 'Good',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'All Departments',
+        semester: 3,
+        subject: 'Hostel Accommodation',
+        edition: '',
+        author: '',
+        isbn: '',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        title: 'Wipro 10W LED Eye-Care Desk Lamp (Warm & Cool Light)',
+        description: 'Rechargeable LED study lamp with 3 color temperatures (warm, natural, cool white) and dimmable touch control. Flexible gooseneck arm. Built-in 2000mAh battery provides backup during hostel power cuts.',
+        category_name: 'Hostel Items',
+        seller_id: Number(adminId),
+        price: 420,
+        listing_type: 'sell',
+        rent_price_monthly: 0,
+        security_deposit: 0,
+        rental_terms: '',
+        condition: 'Like New',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'All',
+        semester: 2,
+        subject: 'Hostel Essentials',
+        edition: '',
+        author: 'Wipro Smart',
+        isbn: '',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        title: 'Dell 22-inch Full HD IPS Monitor (HDMI + VGA with Stand)',
+        description: 'Dell SE2219HX 21.5-inch 1080p 60Hz monitor. Ultra-thin bezel, IPS panel with great viewing angles. Perfect for coding, online classes, and lectures. Comes with HDMI cable and power cord.',
+        category_name: 'Electronics',
+        seller_id: Number(adminId),
+        price: 3600,
+        listing_type: 'both',
+        rent_price_monthly: 600,
+        security_deposit: 3000,
+        rental_terms: 'Monthly rent for semester use. Zero dead pixels, inspected before handover.',
+        condition: 'Like New',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'Computer / IT',
+        semester: 6,
+        subject: 'Practical Coding / Lab',
+        edition: 'Dell SE Series',
+        author: 'Dell India',
+        isbn: '',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        title: 'Diploma Semester 2 Hand-Written Topper Notes (All Subjects)',
+        description: 'Spiral-bound high quality Xerox copies of verified topper notes. Includes diagrammatic charts, bullet summaries, and previous years solved questions.',
+        category_name: 'Notes',
+        seller_id: Number(adminId),
+        price: 350,
+        listing_type: 'sell',
+        rent_price_monthly: 0,
+        security_deposit: 0,
+        rental_terms: '',
+        condition: 'Like New',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        branch: 'All Branches',
+        semester: 2,
+        subject: 'Applied Sciences & Basic Engineering',
+        edition: 'Exam Edition',
+        author: 'GPC Palanpur Study Circle',
+        isbn: '',
+        location: 'Palanpur Campus, Palanpur',
+        availability: 'available',
+        status: 'active',
+        image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80'
+      }
+    ];
 
-  // 3. Seed Realistic Indian Student Products
-  const products = [
-    {
-      title: 'Diploma Semester 3 Financial Accounting Textbook',
-      description: 'Prescribed textbook for Financial Accounting Sem 3. Covers Company Accounts, Valuation of Goodwill, and Shares. Very neat condition, lightly underlined with pencil only. Includes solved exam papers from past 3 years at the back.',
-      category_name: 'Textbooks',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 320,
-      listing_type: 'both',
-      rent_price_monthly: 100,
-      security_deposit: 300,
-      rental_terms: 'Available for semester rental. Please return without water damage or pen markings.',
-      condition: 'Good',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'Management & Commerce',
-      semester: 3,
-      subject: 'Financial Accounting',
-      edition: '5th Revised Edition',
-      author: 'Dr. P. C. Tulsian',
-      isbn: '978-9352834567',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Higher Engineering Mathematics — B.S. Grewal (44th Edition)',
-      description: 'Essential for all engineering mathematics (Sem 1, 2 & 3). Hardcover edition. No missing pages, binding is 100% solid.',
-      category_name: 'Textbooks',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 580,
-      listing_type: 'sell',
-      rent_price_monthly: 0,
-      security_deposit: 0,
-      rental_terms: '',
-      condition: 'Like New',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'All Branches (Common)',
-      semester: 1,
-      subject: 'Engineering Mathematics',
-      edition: '44th Edition',
-      author: 'Dr. B.S. Grewal',
-      isbn: '978-8193328491',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: '/uploads/bs_grewal_44th_edition.jpg'
-    },
-    {
-      title: 'Casio FX-991EX Classwiz Scientific Calculator (552 Functions)',
-      description: 'Original Casio fx-991EX Classwiz with high-resolution natural textbook display. Allowed in semester exams. Has solar backup + battery. Comes with protective slide-on hard case and user quick card.',
-      category_name: 'Calculators',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 1100,
-      listing_type: 'both',
-      rent_price_monthly: 250,
-      security_deposit: 1000,
-      rental_terms: 'Great if you only need it for final exams month! Fully tested and working.',
-      condition: 'Like New',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'Engineering & Sciences',
-      semester: 2,
-      subject: 'Applied Mathematics & Statistics',
-      edition: 'FX-991EX',
-      author: 'Casio India',
-      isbn: '',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1587145820266-a5951ee6f620?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Omega Engineering Mini Drafter + Drawing Board & Clips',
-      description: 'Complete Engineering Drawing kit including heavy-duty mini drafter with steel rod, clamp, 360-degree protractor head, 0.5mm clutch pencil, set squares, and roll-up carrying case. Perfect for 1st Year Engineering Graphics / Drawing.',
-      category_name: 'Stationery',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 490,
-      listing_type: 'both',
-      rent_price_monthly: 150,
-      security_deposit: 500,
-      rental_terms: 'Can rent for the whole 1st semester. Save money compared to buying brand new at stationery shop.',
-      condition: 'Good',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'Mechanical & Civil',
-      semester: 1,
-      subject: 'Engineering Graphics & Design (EGD)',
-      edition: 'Standard Issue',
-      author: 'Omega Stationery',
-      isbn: '',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: '100% Cotton White Lab Coat (Size 38 / M) + Safety Goggles',
-      description: 'Required for Chemistry Lab, Biology & Material Testing practicals. Thick premium cotton fabric with 3 utility pockets. Washed and sanitized. Free transparent safety goggles included.',
-      category_name: 'Lab Equipment',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 240,
-      listing_type: 'sell',
-      rent_price_monthly: 0,
-      security_deposit: 0,
-      rental_terms: '',
-      condition: 'Good',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'Chemical / Mechanical / Civil',
-      semester: 1,
-      subject: 'Engineering Chemistry & Workshop Lab',
-      edition: '',
-      author: '',
-      isbn: '',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Arduino Uno R3 Ultimate Starter Kit (Sensors, Motors, LCD)',
-      description: 'Used for IoT / Embedded Systems mini project. Includes original Arduino Uno board, breadboard, 40+ jumper wires, ultrasonic sensor, IR sensor, 16x2 LCD display, servo motor, stepper motor, RFID reader with tags, and resistors kit in plastic organizer box.',
-      category_name: 'Project Materials',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 850,
-      listing_type: 'both',
-      rent_price_monthly: 300,
-      security_deposit: 800,
-      rental_terms: 'Ideal for semester project submissions! All components tested and working.',
-      condition: 'Like New',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'Computer / IT / Electrical',
-      semester: 5,
-      subject: 'Microprocessors & IoT',
-      edition: 'Rev 3',
-      author: 'RoboCraze / Arduino',
-      isbn: '',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Compact Wooden Study Table with Bookshelf for Hostel Room',
-      description: 'Engineered wood study desk with 2-tier overhead bookshelf and bottom footrest. Very sturdy, perfect dimensions for hostel rooms. Easily fits a laptop, monitor and open notebooks.',
-      category_name: 'Furniture',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 1450,
-      listing_type: 'both',
-      rent_price_monthly: 400,
-      security_deposit: 1200,
-      rental_terms: 'Minimum 2 months rental. Buyer arranges self-pickup.',
-      condition: 'Good',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'All Departments',
-      semester: 3,
-      subject: 'Hostel Accommodation',
-      edition: '',
-      author: '',
-      isbn: '',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Wipro 10W LED Eye-Care Desk Lamp (Warm & Cool Light)',
-      description: 'Rechargeable LED study lamp with 3 color temperatures (warm, natural, cool white) and dimmable touch control. Flexible gooseneck arm. Built-in 2000mAh battery provides backup during hostel power cuts.',
-      category_name: 'Hostel Items',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 420,
-      listing_type: 'sell',
-      rent_price_monthly: 0,
-      security_deposit: 0,
-      rental_terms: '',
-      condition: 'Like New',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'All',
-      semester: 2,
-      subject: 'Hostel Essentials',
-      edition: '',
-      author: 'Wipro Smart',
-      isbn: '',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Dell 22-inch Full HD IPS Monitor (HDMI + VGA with Stand)',
-      description: 'Dell SE2219HX 21.5-inch 1080p 60Hz monitor. Ultra-thin bezel, IPS panel with great viewing angles. Perfect for coding, online classes, and lectures. Comes with HDMI cable and power cord.',
-      category_name: 'Electronics',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 3600,
-      listing_type: 'both',
-      rent_price_monthly: 600,
-      security_deposit: 3000,
-      rental_terms: 'Monthly rent for semester use. Zero dead pixels, inspected before handover.',
-      condition: 'Like New',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'Computer / IT',
-      semester: 6,
-      subject: 'Practical Coding / Lab',
-      edition: 'Dell SE Series',
-      author: 'Dell India',
-      isbn: '',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Diploma Semester 2 Hand-Written Topper Notes (All Subjects)',
-      description: 'Spiral-bound high quality Xerox copies of verified topper notes. Includes diagrammatic charts, bullet summaries, and previous years solved questions.',
-      category_name: 'Notes',
-      seller_id: Number(admin.lastInsertRowid),
-      price: 350,
-      listing_type: 'sell',
-      rent_price_monthly: 0,
-      security_deposit: 0,
-      rental_terms: '',
-      condition: 'Like New',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      branch: 'All Branches',
-      semester: 2,
-      subject: 'Applied Sciences & Basic Engineering',
-      edition: 'Exam Edition',
-      author: 'GPC Palanpur Study Circle',
-      isbn: '',
-      location: 'Palanpur Campus, Palanpur',
-      availability: 'available',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80'
-    }
-  ];
+    const insertProduct = db.prepare(`
+      INSERT INTO products (
+        title, description, category_name, seller_id, price, listing_type,
+        rent_price_monthly, security_deposit, rental_terms, condition,
+        college, course, branch, semester, subject, edition, author, isbn,
+        location, availability, status
+      ) VALUES (
+        @title, @description, @category_name, @seller_id, @price, @listing_type,
+        @rent_price_monthly, @security_deposit, @rental_terms, @condition,
+        @college, @course, @branch, @semester, @subject, @edition, @author, @isbn,
+        @location, @availability, @status
+      )
+    `);
 
-  const insertProduct = db.prepare(`
-    INSERT INTO products (
-      title, description, category_name, seller_id, price, listing_type,
-      rent_price_monthly, security_deposit, rental_terms, condition,
-      college, course, branch, semester, subject, edition, author, isbn,
-      location, availability, status
-    ) VALUES (
-      @title, @description, @category_name, @seller_id, @price, @listing_type,
-      @rent_price_monthly, @security_deposit, @rental_terms, @condition,
-      @college, @course, @branch, @semester, @subject, @edition, @author, @isbn,
-      @location, @availability, @status
+    const insertImage = db.prepare(`
+      INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)
+    `);
+
+    products.forEach(prod => {
+      const img = prod.image;
+      delete prod.image;
+      const info = insertProduct.run(prod);
+      insertImage.run(info.lastInsertRowid, img);
+    });
+
+    // 4. Seed Requests
+    const requests = [
+      {
+        user_id: Number(adminId),
+        title: 'Need Machine Learning & Data Mining Textbook',
+        description: 'Looking for Machine Learning reference textbook or notes for upcoming semester exams.',
+        category_name: 'Textbooks',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        semester: 6,
+        subject: 'Machine Learning',
+        budget: 350,
+        preferred_type: 'Buy',
+        location: 'Palanpur Campus, Palanpur',
+        required_by_date: '2026-10-15',
+        status: 'open'
+      },
+      {
+        user_id: Number(adminId),
+        title: 'Looking for ergonomic study chair on rent for 3 months',
+        description: 'Preparing for exams in hostel room and need a comfortable back-support desk chair.',
+        category_name: 'Furniture',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        semester: 4,
+        subject: 'Hostel Study',
+        budget: 900,
+        preferred_type: 'Rent',
+        location: 'Palanpur Campus, Palanpur',
+        required_by_date: '2026-10-05',
+        status: 'open'
+      },
+      {
+        user_id: Number(adminId),
+        title: 'Urgent: Casio FX-991ES or EX Calculator for semester exams',
+        description: 'Lost my scientific calculator right before mid-sems. Need one urgently within 2 days on campus.',
+        category_name: 'Calculators',
+        college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
+        course: 'Diploma Engineering',
+        semester: 5,
+        subject: 'Applied Mathematics',
+        budget: 800,
+        preferred_type: 'Buy',
+        location: 'Palanpur Campus, Palanpur',
+        required_by_date: '2026-10-02',
+        status: 'open'
+      }
+    ];
+
+    const insertRequest = db.prepare(`
+      INSERT INTO requests (
+        user_id, title, description, category_name, college, course, semester,
+        subject, budget, preferred_type, location, required_by_date, status
+      ) VALUES (
+        @user_id, @title, @description, @category_name, @college, @course, @semester,
+        @subject, @budget, @preferred_type, @location, @required_by_date, @status
+      )
+    `);
+    requests.forEach(req => insertRequest.run(req));
+
+    console.log('CampusMarket database seeded successfully for GOVERNMENT POLITECNIC COLLAGE PALANPUR!');
+  }
+
+  // Update categories item counts and prune categories that have 0 products
+  db.prepare(`
+    UPDATE categories SET item_count = (
+      SELECT COUNT(*) FROM products WHERE category_name = categories.name AND status = 'active'
     )
-  `);
+  `).run();
 
-  const insertImage = db.prepare(`
-    INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)
-  `);
-
-  products.forEach(prod => {
-    const img = prod.image;
-    delete prod.image;
-    const info = insertProduct.run(prod);
-    insertImage.run(info.lastInsertRowid, img);
-  });
-
-  // 4. Seed Requests
-  const requests = [
-    {
-      user_id: Number(admin.lastInsertRowid),
-      title: 'Need Machine Learning & Data Mining Textbook',
-      description: 'Looking for Machine Learning reference textbook or notes for upcoming semester exams.',
-      category_name: 'Textbooks',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      semester: 6,
-      subject: 'Machine Learning',
-      budget: 350,
-      preferred_type: 'Buy',
-      location: 'Palanpur Campus, Palanpur',
-      required_by_date: '2026-10-15',
-      status: 'open'
-    },
-    {
-      user_id: Number(admin.lastInsertRowid),
-      title: 'Looking for ergonomic study chair on rent for 3 months',
-      description: 'Preparing for exams in hostel room and need a comfortable back-support desk chair.',
-      category_name: 'Furniture',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      semester: 4,
-      subject: 'Hostel Study',
-      budget: 900,
-      preferred_type: 'Rent',
-      location: 'Palanpur Campus, Palanpur',
-      required_by_date: '2026-10-05',
-      status: 'open'
-    },
-    {
-      user_id: Number(admin.lastInsertRowid),
-      title: 'Urgent: Casio FX-991ES or EX Calculator for semester exams',
-      description: 'Lost my scientific calculator right before mid-sems. Need one urgently within 2 days on campus.',
-      category_name: 'Calculators',
-      college: 'GOVERNMENT POLITECNIC COLLAGE PALANPUR',
-      course: 'Diploma Engineering',
-      semester: 5,
-      subject: 'Applied Mathematics',
-      budget: 800,
-      preferred_type: 'Buy',
-      location: 'Palanpur Campus, Palanpur',
-      required_by_date: '2026-10-02',
-      status: 'open'
-    }
-  ];
-
-  const insertRequest = db.prepare(`
-    INSERT INTO requests (
-      user_id, title, description, category_name, college, course, semester,
-      subject, budget, preferred_type, location, required_by_date, status
-    ) VALUES (
-      @user_id, @title, @description, @category_name, @college, @course, @semester,
-      @subject, @budget, @preferred_type, @location, @required_by_date, @status
-    )
-  `);
-  requests.forEach(req => insertRequest.run(req));
-
-  console.log('CampusMarket database seeded successfully for GOVERNMENT POLITECNIC COLLAGE PALANPUR!');
+  db.prepare(`
+    DELETE FROM categories WHERE (
+      SELECT COUNT(*) FROM products WHERE category_name = categories.name AND status = 'active'
+    ) = 0
+  `).run();
 }
 
 // Automatically ensure schema & safe migrations are applied

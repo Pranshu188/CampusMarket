@@ -9,7 +9,6 @@ client/node_modules/
 .env.*.local
 
 # Database
-server/*.db
 server/*.db-wal
 server/*.db-shm
 

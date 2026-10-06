@@ -31,7 +31,7 @@ export default function SellPage({ onNavigate }) {
   const [edition, setEdition] = useState('');
   const [isbn, setIsbn] = useState('');
 
-  const [location, setLocation] = useState(user?.location || 'Campus');
+  const [location, setLocation] = useState('Palanpur');
   const [contactPreference, setContactPreference] = useState('CampusMarket Chat');
 
   // Image upload state
@@ -611,7 +611,7 @@ export default function SellPage({ onNavigate }) {
                 <input 
                   type="text" 
                   required 
-                  placeholder="e.g. Palanpur Campus / Main Gate, Palanpur"
+                  placeholder="Palanpur"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="filter-input"

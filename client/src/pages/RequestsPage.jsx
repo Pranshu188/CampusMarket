@@ -28,7 +28,7 @@ export default function RequestsPage({ onNavigate }) {
   const [newSubject, setNewSubject] = useState('');
   const [newBudget, setNewBudget] = useState('');
   const [newType, setNewType] = useState('Buy'); // 'Buy', 'Rent', 'Any'
-  const [newLocation, setNewLocation] = useState(user?.location || 'Campus');
+  const [newLocation, setNewLocation] = useState('Palanpur');
   const [newDate, setNewDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -270,7 +270,7 @@ export default function RequestsPage({ onNavigate }) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                     <MapPin size={13} />
-                    <span>{req.location}</span>
+                    <span>Palanpur</span>
                   </div>
                   <div>
                     {req.required_by_date ? `Needed by ${new Date(req.required_by_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}` : 'Needed ASAP'}
@@ -484,7 +484,7 @@ export default function RequestsPage({ onNavigate }) {
                 <input 
                   type="text" 
                   required
-                  placeholder="e.g. Palanpur Campus / Main Gate, Palanpur"
+                  placeholder="Palanpur"
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
                   className="filter-input"

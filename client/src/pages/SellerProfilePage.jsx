@@ -95,7 +95,7 @@ export default function SellerProfilePage({ sellerId, onNavigate }) {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <MapPin size={13} /> {seller.location || 'Campus'}
+                <MapPin size={13} /> Palanpur
               </div>
               <div>•</div>
               <div>Member since {new Date(seller.created_at).toLocaleDateString([], { month: 'short', year: 'numeric' })}</div>

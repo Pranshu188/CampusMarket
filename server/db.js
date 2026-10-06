@@ -306,9 +306,10 @@ function initDatabase() {
       db.prepare("UPDATE users SET password_hash = ?, role = 'admin', name = 'Shreya Rajgor', college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', verification_status = 'verified', status = 'active' WHERE id = ?").run(adminPasswordHash, adminId);
     }
 
-    // Ensure all products and requests are assigned to current admin
-    db.prepare("UPDATE products SET seller_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', status = 'active', availability = 'available'").run(adminId);
-    db.prepare("UPDATE requests SET user_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', status = 'open'").run(adminId);
+    // Ensure all products, requests, and users have location set to Palanpur
+    db.prepare("UPDATE products SET seller_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', location = 'Palanpur', status = 'active', availability = 'available'").run(adminId);
+    db.prepare("UPDATE requests SET user_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', location = 'Palanpur', status = 'open'").run(adminId);
+    db.prepare("UPDATE users SET location = 'Palanpur', college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR'").run();
 
     // Auto-fix lab coat image & location to doctor white coat & Palanpur
     db.prepare(`
@@ -318,7 +319,7 @@ function initDatabase() {
     `).run();
     db.prepare(`
       UPDATE products
-      SET location = 'Palanpur Campus, Palanpur', college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR'
+      SET location = 'Palanpur', college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR'
       WHERE title LIKE '%Lab Coat%'
     `).run();
 
@@ -389,7 +390,7 @@ function seedInitialData(adminId = 1) {
         edition: '5th Revised Edition',
         author: 'Dr. P. C. Tulsian',
         isbn: '978-9352834567',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80'
@@ -413,7 +414,7 @@ function seedInitialData(adminId = 1) {
         edition: '44th Edition',
         author: 'Dr. B.S. Grewal',
         isbn: '978-8193328491',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: '/uploads/bs_grewal_44th_edition.jpg'
@@ -437,7 +438,7 @@ function seedInitialData(adminId = 1) {
         edition: 'FX-991EX',
         author: 'Casio India',
         isbn: '',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: 'https://images.unsplash.com/photo-1587145820266-a5951ee6f620?auto=format&fit=crop&w=800&q=80'
@@ -461,7 +462,7 @@ function seedInitialData(adminId = 1) {
         edition: 'Standard Issue',
         author: 'Omega Stationery',
         isbn: '',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80'
@@ -485,7 +486,7 @@ function seedInitialData(adminId = 1) {
         edition: '',
         author: '',
         isbn: '',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: '/uploads/doctor_white_lab_coat.jpg'
@@ -509,7 +510,7 @@ function seedInitialData(adminId = 1) {
         edition: 'Rev 3',
         author: 'RoboCraze / Arduino',
         isbn: '',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80'
@@ -533,7 +534,7 @@ function seedInitialData(adminId = 1) {
         edition: '',
         author: '',
         isbn: '',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=800&q=80'
@@ -557,7 +558,7 @@ function seedInitialData(adminId = 1) {
         edition: '',
         author: 'Wipro Smart',
         isbn: '',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: 'https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?auto=format&fit=crop&w=800&q=80'
@@ -581,7 +582,7 @@ function seedInitialData(adminId = 1) {
         edition: 'Dell SE Series',
         author: 'Dell India',
         isbn: '',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80'
@@ -605,7 +606,7 @@ function seedInitialData(adminId = 1) {
         edition: 'Exam Edition',
         author: 'GPC Palanpur Study Circle',
         isbn: '',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         availability: 'available',
         status: 'active',
         image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80'
@@ -650,7 +651,7 @@ function seedInitialData(adminId = 1) {
         subject: 'Machine Learning',
         budget: 350,
         preferred_type: 'Buy',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         required_by_date: '2026-10-15',
         status: 'open'
       },
@@ -665,7 +666,7 @@ function seedInitialData(adminId = 1) {
         subject: 'Hostel Study',
         budget: 900,
         preferred_type: 'Rent',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         required_by_date: '2026-10-05',
         status: 'open'
       },
@@ -680,7 +681,7 @@ function seedInitialData(adminId = 1) {
         subject: 'Applied Mathematics',
         budget: 800,
         preferred_type: 'Buy',
-        location: 'Palanpur Campus, Palanpur',
+        location: 'Palanpur',
         required_by_date: '2026-10-02',
         status: 'open'
       }

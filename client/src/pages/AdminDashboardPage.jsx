@@ -827,7 +827,7 @@ export default function AdminDashboardPage({ onNavigate }) {
                             <div style={{ display: 'flex', gap: '1.25rem', marginTop: '0.35rem', fontSize: '0.8rem', flexWrap: 'wrap' }}>
                               <span>✉️ {student.email}</span>
                               {student.phone && <span>📞 {student.phone}</span>}
-                              <span>📍 {student.location || 'Campus'}</span>
+                              <span>📍 Palanpur</span>
                               <span>📅 Joined: {new Date(student.created_at).toLocaleDateString()}</span>
                             </div>
                             {student.verification_reason && (

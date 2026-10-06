@@ -259,7 +259,7 @@ export default function MessagesPage({ params = {}, onNavigate }) {
                         {activeConv.product_title}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Price: <strong>{formatPrice(activeConv.product_price || 0)}</strong> • {activeConv.product_location || 'Campus'}
+                        Price: <strong>{formatPrice(activeConv.product_price || 0)}</strong> • Palanpur
                       </div>
                     </div>
                   </div>

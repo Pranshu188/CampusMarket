@@ -220,7 +220,7 @@ export default function ProductDetailPage({ productId, onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <MapPin size={15} color="var(--primary)" />
-              <span>{product.location}</span>
+              <span>Palanpur</span>
             </div>
             <div>•</div>
             <div>Listed {new Date(product.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</div>

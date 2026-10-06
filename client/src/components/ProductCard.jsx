@@ -128,9 +128,9 @@ export default function ProductCard({ product, onNavigate, onWishlistChange }) {
 
         {/* Footer: Location & Date */}
         <div className="card-footer">
-          <div className="card-location" title={product.location}>
+          <div className="card-location" title="Palanpur">
             <MapPin size={13} />
-            <span>{product.location}</span>
+            <span>Palanpur</span>
           </div>
 
           <div>

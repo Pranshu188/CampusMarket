@@ -16,7 +16,7 @@ export default function AuthModal({ onNavigate }) {
   const [course, setCourse] = useState('Diploma Engineering');
   const [branch, setBranch] = useState('');
   const [semester, setSemester] = useState('1');
-  const [location, setLocation] = useState('Palanpur Campus, Palanpur');
+  const [location, setLocation] = useState('Palanpur');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,7 +51,7 @@ export default function AuthModal({ onNavigate }) {
           course: course.trim() || 'Diploma Engineering',
           branch: branch.trim(),
           semester: parseInt(semester) || 1,
-          location: location.trim() || 'Palanpur Campus, Palanpur'
+          location: location.trim() || 'Palanpur'
         });
         navigateToDashboardIfNeeded(true);
       }
@@ -228,7 +228,7 @@ export default function AuthModal({ onNavigate }) {
                 </label>
                 <input 
                   type="text" 
-                  placeholder="e.g. Palanpur Campus, Palanpur"
+                  placeholder="Palanpur"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="filter-input"

@@ -301,7 +301,7 @@ export default function BrowsePage({ searchParams = {}, onNavigate }) {
             <label className="filter-title">City / Campus Area</label>
             <input 
               type="text" 
-              placeholder="e.g. Navrangpura, Matunga, North Campus"
+              placeholder="Palanpur"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="filter-input"

@@ -654,7 +654,7 @@ export default function DashboardPage({ initialTab = 'listings', onNavigate }) {
                         </span>
                         <h4 style={{ fontSize: '1rem', marginTop: '0.2rem', marginBottom: '0.25rem' }}>{req.title}</h4>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          Budget: {req.budget ? formatPrice(req.budget) : 'Flexible'} • {req.location}
+                          Budget: {req.budget ? formatPrice(req.budget) : 'Flexible'} • Palanpur
                         </div>
                       </div>
 

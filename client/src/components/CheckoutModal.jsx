@@ -230,7 +230,7 @@ export default function CheckoutModal({ product, mode = 'buy', onClose, onSucces
                     Seller: <strong>{product.seller_name}</strong> • {product.condition}
                   </div>
                   <div style={{ fontSize: '0.775rem', color: '#059669', fontWeight: 600, marginTop: '0.2rem' }}>
-                    📍 Campus: {product.location}
+                    📍 Campus: Palanpur
                   </div>
                 </div>
               </div>

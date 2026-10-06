@@ -12,7 +12,7 @@ export default function ProfileEditPage({ onNavigate }) {
   const [course, setCourse] = useState(user?.course || '');
   const [branch, setBranch] = useState(user?.branch || '');
   const [semester, setSemester] = useState(user?.semester?.toString() || '1');
-  const [location, setLocation] = useState(user?.location || 'Campus');
+  const [location, setLocation] = useState(user?.location || 'Palanpur');
   const [bio, setBio] = useState(user?.bio || '');
   const [avatar, setAvatar] = useState(user?.avatar || '');
 
@@ -30,7 +30,7 @@ export default function ProfileEditPage({ onNavigate }) {
       setCourse(user.course || '');
       setBranch(user.branch || '');
       setSemester(user.semester?.toString() || '1');
-      setLocation(user.location || 'Campus');
+      setLocation(user.location || 'Palanpur');
       setBio(user.bio || '');
       setAvatar(user.avatar || '');
     }
@@ -53,7 +53,7 @@ export default function ProfileEditPage({ onNavigate }) {
         course: course.trim() || null,
         branch: branch.trim() || null,
         semester: semester ? parseInt(semester) : null,
-        location: location.trim() || 'Campus',
+        location: location.trim() || 'Palanpur',
         bio: bio.trim() || null,
         avatar: avatar.trim() || null
       });
@@ -233,7 +233,7 @@ export default function ProfileEditPage({ onNavigate }) {
           </label>
           <input 
             type="text" 
-            placeholder="e.g. Palanpur Campus, Palanpur"
+            placeholder="Palanpur"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className="filter-input"

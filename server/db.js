@@ -289,6 +289,13 @@ function initDatabase() {
     db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('admin_upi_name', 'CampusMarket Escrow Account');
   }
 
+  // Auto-prune empty categories that have no active products
+  try {
+    db.prepare("DELETE FROM categories WHERE (SELECT COUNT(*) FROM products WHERE category_name = categories.name AND status = 'active') = 0").run();
+  } catch (e) {
+    console.error('Category cleanup notice:', e.message);
+  }
+
   // Seed database if users count is 0
   seedInitialData();
 }
@@ -301,7 +308,7 @@ function seedInitialData() {
 
   console.log('Seeding initial CampusMarket database...');
 
-  // 1. Seed Categories
+  // 1. Seed Categories (Only active categories with products)
   const categories = [
     { name: 'Textbooks', slug: 'textbooks', icon: 'BookOpen', description: 'Academic books for all universities and semesters' },
     { name: 'Notes', slug: 'notes', icon: 'FileText', description: 'Handwritten notes, solved papers & question banks' },
@@ -311,11 +318,7 @@ function seedInitialData() {
     { name: 'Furniture', slug: 'furniture', icon: 'Armchair', description: 'Study tables, ergonomic chairs & storage racks' },
     { name: 'Hostel Items', slug: 'hostel-items', icon: 'Home', description: 'Kettles, desk lamps, mattress toppers & iron boxes' },
     { name: 'Stationery', slug: 'stationery', icon: 'PenTool', description: 'Engineering drafter, drawing sheets & geometry sets' },
-    { name: 'Bags', slug: 'bags', icon: 'Briefcase', description: 'College backpacks, laptop bags & gym sacks' },
-    { name: 'Clothing / Accessories', slug: 'clothing', icon: 'Shirt', description: 'College blazers, aprons, lab coats & formal wear' },
-    { name: 'Project Materials', slug: 'project-materials', icon: 'Cpu', description: 'Sensors, motors, microcontrollers & 3D printed parts' },
-    { name: 'Sports Equipment', slug: 'sports', icon: 'Trophy', description: 'Badminton rackets, cricket bats & football gear' },
-    { name: 'Other Student Items', slug: 'other', icon: 'Package', description: 'Bicycles, musical instruments & miscellaneous items' }
+    { name: 'Project Materials', slug: 'project-materials', icon: 'Cpu', description: 'Sensors, motors, microcontrollers & 3D printed parts' }
   ];
 
   const insertCategory = db.prepare(`

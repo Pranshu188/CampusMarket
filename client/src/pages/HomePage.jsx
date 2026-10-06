@@ -217,7 +217,7 @@ export default function HomePage({ onNavigate }) {
           </div>
 
           <div className="category-cards-grid">
-            {categories.slice(0, 12).map(cat => (
+            {categories.filter(c => c.active_count === undefined || c.active_count > 0).slice(0, 12).map(cat => (
               <div 
                 key={cat.id} 
                 className="category-tile"

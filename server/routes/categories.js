@@ -3,16 +3,25 @@ const router = express.Router();
 const { db } = require('../db');
 const { requireAdmin } = require('../middleware/auth');
 
-// 1. GET /api/categories — List all categories with active product count
+// 1. GET /api/categories — List categories with active product count
+// By default, only returns categories that have available/active products
 router.get('/', (req, res) => {
   try {
-    const categories = db.prepare(`
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    const { all } = req.query;
+    let query = `
       SELECT 
         c.*,
         (SELECT COUNT(*) FROM products WHERE category_name = c.name AND status = 'active') as active_count
       FROM categories c
-      ORDER BY c.name ASC
-    `).all();
+    `;
+
+    if (all !== 'true') {
+      query += ` WHERE (SELECT COUNT(*) FROM products WHERE category_name = c.name AND status = 'active') > 0`;
+    }
+
+    query += ` ORDER BY c.name ASC`;
+    const categories = db.prepare(query).all();
 
     res.json({ categories });
   } catch (error) {

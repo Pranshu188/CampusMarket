@@ -317,7 +317,7 @@ export default function AdminDashboardPage({ onNavigate }) {
         setReportsList(repRes.reports || []);
       }
       if (activeTab === 'categories') {
-        const catRes = await api.getCategories();
+        const catRes = await api.getCategories({ all: 'true' });
         setCategoriesList(catRes.categories || []);
       }
     } catch (err) {
@@ -390,7 +390,7 @@ export default function AdminDashboardPage({ onNavigate }) {
       await api.createCategory({ name: newCatName.trim(), description: newCatDesc.trim() });
       setNewCatName('');
       setNewCatDesc('');
-      const catRes = await api.getCategories();
+      const catRes = await api.getCategories({ all: 'true' });
       setCategoriesList(catRes.categories || []);
     } catch (e) {
       alert(e.message);

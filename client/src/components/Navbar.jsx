@@ -84,6 +84,9 @@ export default function Navbar({ onNavigate, currentPath, searchParams, setSearc
     } catch (e) {}
   };
 
+  // Only show categories that have available products
+  const availableCategories = categories.filter(cat => cat.active_count === undefined || cat.active_count > 0);
+
   return (
     <header className="site-header">
       <div className="container">
@@ -120,7 +123,7 @@ export default function Navbar({ onNavigate, currentPath, searchParams, setSearc
                 className="search-category-select"
               >
                 <option value="All">All Categories</option>
-                {categories.map(cat => (
+                {availableCategories.map(cat => (
                   <option key={cat.id} value={cat.name}>{cat.name}</option>
                 ))}
               </select>
@@ -474,7 +477,7 @@ export default function Navbar({ onNavigate, currentPath, searchParams, setSearc
             >
               All Categories
             </button>
-            {categories.map(cat => (
+            {availableCategories.map(cat => (
               <button 
                 key={cat.id}
                 onClick={() => onNavigate('/browse', { category: cat.name })}

@@ -184,7 +184,7 @@ export default function BrowsePage({ searchParams = {}, onNavigate }) {
               className="filter-input"
             >
               <option value="All">All Categories</option>
-              {categories.map(c => (
+              {categories.filter(c => c.active_count === undefined || c.active_count > 0).map(c => (
                 <option key={c.id} value={c.name}>{c.name}</option>
               ))}
             </select>

@@ -245,7 +245,6 @@ export default function SellPage({ onNavigate }) {
                   {categories.map(c => (
                     <option key={c.id} value={c.name}>{c.name}</option>
                   ))}
-                  <option value="Other Student Items">Other (Not listed)</option>
                 </select>
               </div>
 

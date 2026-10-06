@@ -337,7 +337,7 @@ router.post('/', requireAuth, (req, res) => {
     const result = insertProduct.run(
       title.trim(),
       description.trim(),
-      category_name || 'Other Student Items',
+      category_name || 'Stationery',
       req.user.id,
       parseFloat(price),
       listing_type,

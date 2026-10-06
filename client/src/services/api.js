@@ -63,7 +63,7 @@ export const api = {
   uploadImages: (formData) => request('/products/upload-images', { method: 'POST', body: formData }),
 
   // Categories
-  getCategories: () => request('/categories'),
+  getCategories: (params) => request(`/categories${params ? '?' + new URLSearchParams(params).toString() : ''}`),
   createCategory: (data) => request('/categories', { method: 'POST', body: JSON.stringify(data) }),
   updateCategory: (id, data) => request(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteCategory: (id) => request(`/categories/${id}`, { method: 'DELETE' }),

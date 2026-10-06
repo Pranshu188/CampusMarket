@@ -310,6 +310,18 @@ function initDatabase() {
     db.prepare("UPDATE products SET seller_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', status = 'active', availability = 'available'").run(adminId);
     db.prepare("UPDATE requests SET user_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', status = 'open'").run(adminId);
 
+    // Auto-fix lab coat image & location to doctor white coat & Palanpur
+    db.prepare(`
+      UPDATE product_images 
+      SET image_url = '/uploads/doctor_white_lab_coat.jpg'
+      WHERE product_id IN (SELECT id FROM products WHERE title LIKE '%Lab Coat%')
+    `).run();
+    db.prepare(`
+      UPDATE products
+      SET location = 'Palanpur Campus, Palanpur', college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR'
+      WHERE title LIKE '%Lab Coat%'
+    `).run();
+
     // Purge legacy demo user accounts
     db.pragma('foreign_keys = OFF');
     db.prepare('DELETE FROM orders').run();
@@ -476,7 +488,7 @@ function seedInitialData(adminId = 1) {
         location: 'Palanpur Campus, Palanpur',
         availability: 'available',
         status: 'active',
-        image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80'
+        image: '/uploads/doctor_white_lab_coat.jpg'
       },
       {
         title: 'Arduino Uno R3 Ultimate Starter Kit (Sensors, Motors, LCD)',

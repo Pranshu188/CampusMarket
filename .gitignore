@@ -16,6 +16,7 @@ server/*.db-shm
 server/uploads/*
 !server/uploads/.gitkeep
 !server/uploads/bs_grewal_44th_edition.jpg
+!server/uploads/doctor_white_lab_coat.jpg
 
 # Logs
 *.log

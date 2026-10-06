@@ -9,8 +9,8 @@ import { useAuth } from '../context/AuthContext';
 
 function AdminLoginPortal({ user, onNavigate, onAdminSuccess }) {
   const { login } = useAuth();
-  const [adminEmail, setAdminEmail] = useState('admin@campusmarket.com');
-  const [adminPassword, setAdminPassword] = useState('admin123');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,19 +23,6 @@ function AdminLoginPortal({ user, onNavigate, onAdminSuccess }) {
       if (onAdminSuccess) onAdminSuccess();
     } catch (err) {
       setError(err.message || 'Invalid administrator credentials');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickAdmin = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      await login('admin@campusmarket.com', 'admin123');
-      if (onAdminSuccess) onAdminSuccess();
-    } catch (err) {
-      setError(err.message || 'Admin sign in failed');
     } finally {
       setLoading(false);
     }
@@ -100,45 +87,6 @@ function AdminLoginPortal({ user, onNavigate, onAdminSuccess }) {
           </div>
         )}
 
-        {/* 1-Click Fast Admin Sign-In */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px dashed rgba(255, 255, 255, 0.2)',
-          borderRadius: '0.75rem',
-          padding: '0.85rem 1rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '0.75rem'
-        }}>
-          <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase' }}>
-              ⚡ Quick Admin Access
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
-              admin@campusmarket.com
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleQuickAdmin}
-            disabled={loading}
-            style={{
-              padding: '0.45rem 0.85rem',
-              background: '#0d9488',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '0.5rem',
-              fontWeight: 700,
-              fontSize: '0.775rem',
-              cursor: 'pointer'
-            }}
-          >
-            {loading ? 'Entering...' : 'Instant 1-Click'}
-          </button>
-        </div>
-
         {error && (
           <div style={{
             background: 'rgba(239, 68, 68, 0.15)',
@@ -166,7 +114,7 @@ function AdminLoginPortal({ user, onNavigate, onAdminSuccess }) {
                 required
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@campusmarket.com"
+                placeholder="shreyarajgor5@gmail.com"
                 style={{
                   width: '100%',
                   padding: '0.65rem 0.75rem 0.65rem 2.4rem',

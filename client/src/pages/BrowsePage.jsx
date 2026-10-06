@@ -193,17 +193,17 @@ export default function BrowsePage({ searchParams = {}, onNavigate }) {
           {/* Academic Information Filters */}
           <div className="filter-group">
             <label className="filter-title" style={{ color: 'var(--primary)', borderBottom: '1px dashed var(--primary-border)', paddingBottom: '0.3rem' }}>
-              Academic Filters (GTU, MU, DU...)
+              Academic Filters (GOVERNMENT POLITECNIC COLLAGE PALANPUR)
             </label>
 
             <div style={{ marginTop: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               <div>
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>
-                  College / University
+                  College / Institute
                 </span>
                 <input 
                   type="text" 
-                  placeholder="e.g. GTU, LDCE, VJTI, SRCC"
+                  placeholder="e.g. GOVERNMENT POLITECNIC COLLAGE PALANPUR"
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
                   className="filter-input"

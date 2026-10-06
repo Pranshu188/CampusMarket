@@ -143,7 +143,7 @@ export default function RequestsPage({ onNavigate }) {
           </div>
           <h1 style={{ fontSize: '1.85rem', marginBottom: '0.4rem' }}>Student Item Requests</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem', lineHeight: 1.5 }}>
-            Can't find a specific GTU/MU/DU textbook, calculator, or hostel study item? Post what you need and let students who have it contact you directly!
+            Can't find a specific textbook, calculator, or hostel study item at GOVERNMENT POLITECNIC COLLAGE PALANPUR? Post what you need and let fellow students contact you directly!
           </p>
         </div>
 
@@ -379,7 +379,7 @@ export default function RequestsPage({ onNavigate }) {
                 <input 
                   type="text" 
                   required 
-                  placeholder="e.g. Need GTU BBA Sem 3 Financial Accounting textbook (Tulsian)"
+                  placeholder="e.g. Need Engineering Mathematics textbook (B.S. Grewal)"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="filter-input"
@@ -426,7 +426,7 @@ export default function RequestsPage({ onNavigate }) {
                   </label>
                   <input 
                     type="text" 
-                    placeholder="e.g. GTU, LDCE, DU"
+                    placeholder="e.g. GOVERNMENT POLITECNIC COLLAGE PALANPUR"
                     value={newCollege}
                     onChange={(e) => setNewCollege(e.target.value)}
                     className="filter-input"
@@ -484,7 +484,7 @@ export default function RequestsPage({ onNavigate }) {
                 <input 
                   type="text" 
                   required
-                  placeholder="e.g. Navrangpura / LDCE Campus, Ahmedabad"
+                  placeholder="e.g. Palanpur Campus / Main Gate, Palanpur"
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
                   className="filter-input"

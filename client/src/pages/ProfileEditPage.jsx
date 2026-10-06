@@ -176,7 +176,7 @@ export default function ProfileEditPage({ onNavigate }) {
             </label>
             <input 
               type="text" 
-              placeholder="e.g. Gujarat Technological University (LDCE)"
+              placeholder="e.g. GOVERNMENT POLITECNIC COLLAGE PALANPUR"
               value={college}
               onChange={(e) => setCollege(e.target.value)}
               className="filter-input"
@@ -233,7 +233,7 @@ export default function ProfileEditPage({ onNavigate }) {
           </label>
           <input 
             type="text" 
-            placeholder="e.g. Navrangpura, Ahmedabad"
+            placeholder="e.g. Palanpur Campus, Palanpur"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className="filter-input"

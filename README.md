@@ -1,9 +1,9 @@
 # CampusMarket 🎓
 > **Buy. Sell. Rent. Campus Life Made Easy.**
 
-CampusMarket is a production-ready, peer-to-peer student marketplace built for college and university students across India (Gujarat Technological University, Mumbai University, Delhi University, VTU, and campuses nationwide).
+CampusMarket is a production-ready, peer-to-peer student marketplace built exclusively for students and faculty of **GOVERNMENT POLITECNIC COLLAGE PALANPUR**.
 
-Students can buy, sell, or rent used and new academic materials they need for college life — including textbooks, handwritten notes, scientific calculators, lab coats, dissection kits, hostel furniture, electronics, and project components.
+Students can buy, sell, or rent used and new academic materials they need for college life — including textbooks, handwritten notes, scientific calculators, lab coats, engineering drawing kits, hostel essentials, electronics, and project components.
 
 ---
 
@@ -13,18 +13,18 @@ Students can buy, sell, or rent used and new academic materials they need for co
 - **Direct Campus Handover:** Students arrange safe on-campus meetings (library, canteen, gate) without expensive middleman shipping.
 - **Selling Flow:** High-speed listing form supporting multiple image previews, product condition, general campus location, and contact preferences.
 - **Rental System:** Semester or monthly rentals (e.g. ₹150/mo) with automated calculation of rental duration, total payable, and refundable security deposit tracking.
-- **Wanted / Item Request Board:** Students can post what they need (e.g., *"Need GTU BBA Sem 3 Financial Accounting textbook"*), and batchmates/seniors with the item can contact them directly.
+- **Wanted / Item Request Board:** Students can post what they need (e.g., *"Need Engineering Drawing instruments / Semester 3 notes"*), and batchmates/seniors with the item can contact them directly.
 
 ### 2. Comprehensive Academic Filtering
 - Listings support rich academic metadata:
-  - **University / College** (GTU, MU, DU, VTU, etc.)
-  - **Course / Degree** (BBA, B.Tech / BE, B.Com, MBA, etc.)
-  - **Branch / Department** (Computer, Mechanical, Finance, etc.)
+  - **University / College** (GOVERNMENT POLITECNIC COLLAGE PALANPUR)
+  - **Course / Degree** (Diploma Engineering, B.Tech / BE, etc.)
+  - **Branch / Department** (Computer, Civil, Mechanical, Electrical, etc.)
   - **Semester** (1 through 8)
   - **Subject Name**
   - **Author / Publisher**
   - **Edition & Optional ISBN**
-- Full-text search across titles, descriptions, subjects, courses, and universities.
+- Full-text search across titles, descriptions, subjects, courses, and departments.
 
 ### 3. Internal Buyer-Seller Chat
 - Built-in real-time student messaging system with conversation list and attached product reference card.
@@ -112,7 +112,7 @@ CampusMarket/
 │       │   ├── Footer.jsx      # Footer with safety disclaimer & policy links
 │       │   ├── MobileBottomNav.jsx # Fixed bottom bar for smartphones
 │       │   ├── ProductCard.jsx # Marketplace card with academic pill & price
-│       │   ├── AuthModal.jsx   # Multi-mode login, OTP, and 1-click demo buttons
+│       │   ├── AuthModal.jsx   # Clean student and admin authentication modal (Email & Password)
 │       │   ├── CheckoutModal.jsx # Buy & Rent checkout with UPI/Card simulation
 │       │   ├── ReportModal.jsx # Listing report submission modal
 │       │   └── ReviewModal.jsx # Star rating & written review modal
@@ -154,19 +154,15 @@ The SQLite database (`server/campusmarket.db`) implements proper relational tabl
 
 ---
 
-## 🔑 Demo Accounts & Pre-seeded Data
+## 🔑 Administrator & User Accounts
 
-The database seeds automatically with realistic Indian college products, students, and an official administrator:
+All demo accounts have been purged. The system is configured with a dedicated Administrator account:
 
-| Role | Email | Password | Details |
+| Role | Email | Password | Access Details |
 |---|---|---|---|
-| **Admin Moderator** | `admin@campusmarket.com` | `admin123` | Full access to `/admin` dashboard, product moderation, user suspensions, and report management. |
-| **Student 1 (Engg)** | `aarav.patel@gtu.ac.in` | `campus123` | 6th Sem Computer Engineering student at LDCE (GTU), Ahmedabad. |
-| **Student 2 (BBA)** | `priya.sharma@bba.gtu.ac.in` | `campus123` | 4th Sem BBA Finance student at Som-Lalit Institute (GTU). |
-| **Student 3 (Mech)** | `rohan.deshmukh@mu.ac.in` | `campus123` | 5th Sem Mechanical Engineering at VJTI (Mumbai University). |
-| **Student 4 (Commerce)**| `ananya.verma@du.ac.in` | `campus123` | 3rd Sem B.Com (Hons) student at SRCC (Delhi University). |
+| **System Administrator** | `shreyarajgor5@gmail.com` | `Shreya_@05` | Full administrative control at `/admin` (Moderation, reports, user management, site statistics). |
 
-> **Convenience:** When you open the login modal, you will see **Instant 1-Click Demo Login** buttons for Aarav, Priya, and Admin for immediate testing!
+> **User Authentication:** New students can register and log in instantly using their email and password. All new registrations automatically belong to **GOVERNMENT POLITECNIC COLLAGE PALANPUR**. Instant demo login buttons have been completely disabled.
 
 ---
 
@@ -244,28 +240,28 @@ DB_PATH=campusmarket.db
 
 1. **Explore the Homepage:**
    - Go to `http://localhost:5000/`.
-   - View the Hero section, search bar, popular tags, and category tiles.
-2. **Search by Academic Syllabus:**
-   - Type `"GTU BBA"` or click the quick tag **GTU BBA Sem 3 Financial Accounting**.
+   - View the Hero section, search bar, popular tags, and category tiles tailored for **GOVERNMENT POLITECNIC COLLAGE PALANPUR**.
+2. **Search by Academic Subject:**
+   - Type `"Calculus"` or click the quick tag **Engineering Mathematics**.
    - Browse the results with active filter pills.
 3. **Inspect Product Details:**
-   - Click on **GTU BBA Semester 3 Financial Accounting Textbook**.
-   - Check the academic specs table, pricing breakdown (Buy ₹320 or Rent ₹100/mo), and seller card for Priya Sharma.
-4. **Log In in 1 Click:**
+   - Click on any product (e.g. **Higher Engineering Mathematics**, **Scientific Calculator FX-991EX**).
+   - Check the academic specs table, pricing breakdown, and seller card.
+4. **Log In or Sign Up:**
    - Click **Log In** in the navbar.
-   - Click the button **Aarav (Engg)** for instant student authentication.
+   - Enter your email and password, or switch to the Sign Up tab to register a new student account.
 5. **Buy / Rent Flow with Checkout:**
    - Click **Rent for Semester** or **Buy Now**.
-   - The Checkout modal opens: choose duration (e.g. 2 months), view the refundable deposit calculation, review the on-campus handover disclaimer, and select a simulated payment mode (UPI / GPay / Card).
+   - The Checkout modal opens: choose duration (e.g. 2 months), view the refundable deposit calculation, review the on-campus handover disclaimer, and select a payment mode (UPI / GPay / Card).
    - Click **Pay & Confirm**.
    - The order confirmation screen gives you a transaction number and a direct button to chat with the seller.
 6. **Chat with Seller:**
    - Click **Chat with Seller**.
-   - Send a message to coordinate campus handover at the library.
+   - Send a message to coordinate on-campus handover.
 7. **Post an Item Request:**
    - Click **Requests** in the navbar.
-   - View requests from other students or click **Post an Item Request** to post what book or calculator you need.
-8. **Test Admin Moderation:**
-   - Log in using **Admin Moderator** (`admin@campusmarket.com` / `admin123`).
+   - View requests from other students or click **Post an Item Request** to post what book, drawing tool, or calculator you need.
+8. **Admin Moderation:**
    - Navigate to `/admin`.
+   - Log in using Administrator credentials (`shreyarajgor5@gmail.com` / `Shreya_@05`).
    - View platform metrics, approve/reject newly submitted listings, manage student accounts, inspect orders/rentals, and adjust moderation policies.

@@ -30,7 +30,7 @@ export function PolicyPage({ type = 'terms', onNavigate }) {
             2. Item Inspection Before Handover
           </h3>
           <ul style={{ listStyle: 'disc', paddingLeft: '1.25rem', fontSize: '0.9rem', color: 'var(--text-body)', lineHeight: 1.7 }}>
-            <li><strong>Textbooks & Notes:</strong> Verify the edition number, syllabus match (GTU/MU/DU), and that essential pages or solved papers are intact.</li>
+            <li><strong>Textbooks & Notes:</strong> Verify the edition number, syllabus match (GOVERNMENT POLITECNIC COLLAGE PALANPUR), and that essential pages or solved papers are intact.</li>
             <li><strong>Electronics & Calculators:</strong> Test scientific calculator buttons, display contrast, and battery operation on the spot.</li>
             <li><strong>Rental Security Deposits:</strong> Inspect items together and document condition in the CampusMarket chat.</li>
           </ul>

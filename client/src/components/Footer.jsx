@@ -60,16 +60,16 @@ export default function Footer({ onNavigate }) {
             </ul>
           </div>
 
-          {/* Col 4: Indian University Coverage */}
+          {/* Col 4: Campus Coverage */}
           <div className="footer-col">
-            <h5>Campuses Supported</h5>
+            <h5>Campus Coverage</h5>
             <ul className="footer-links">
-              <li><span>Gujarat Technological University (GTU)</span></li>
-              <li><span>Mumbai University (MU / VJTI)</span></li>
-              <li><span>Delhi University (DU / SRCC)</span></li>
-              <li><span>VTU Karnataka</span></li>
-              <li><span>Savitribai Phule Pune Univ (SPPU)</span></li>
-              <li><span>Open to All Colleges Across India</span></li>
+              <li><strong style={{ color: 'var(--primary)', fontWeight: 700 }}>GOVERNMENT POLITECNIC COLLAGE PALANPUR</strong></li>
+              <li><span>Palanpur, Gujarat</span></li>
+              <li><span>Department of Computer Engineering</span></li>
+              <li><span>Department of Mechanical Engineering</span></li>
+              <li><span>Department of Civil Engineering</span></li>
+              <li><span>Department of Electrical Engineering</span></li>
             </ul>
           </div>
         </div>

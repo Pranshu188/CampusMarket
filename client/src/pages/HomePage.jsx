@@ -66,13 +66,13 @@ export default function HomePage({ onNavigate }) {
   };
 
   const popularSearches = [
-    'GTU BBA Sem 3 Financial Accounting',
-    'Higher Engineering Mathematics',
+    'Engineering Mathematics',
     'Casio fx-991EX Calculator',
     'Mini Drafter',
     'Hostel Study Table',
-    'SRCC Notes',
-    'White Lab Coat'
+    'Topper Notes',
+    'White Lab Coat',
+    'Arduino Uno Kit'
   ];
 
   return (
@@ -83,7 +83,7 @@ export default function HomePage({ onNavigate }) {
           <div className="hero-inner">
             <div className="hero-pill-badge">
               <Sparkles size={14} />
-              Peer-to-Peer Student Marketplace for Indian Campuses
+              Peer-to-Peer Student Marketplace for GOVERNMENT POLITECNIC COLLAGE PALANPUR
             </div>
 
             <h1 className="hero-title">
@@ -92,7 +92,7 @@ export default function HomePage({ onNavigate }) {
             </h1>
 
             <p className="hero-subtitle">
-              CampusMarket connects college students across universities. Buy, sell, or rent used textbooks, semester notes, lab coats, calculators, and hostel essentials directly from fellow students.
+              CampusMarket connects students at GOVERNMENT POLITECNIC COLLAGE PALANPUR. Buy, sell, or rent used textbooks, semester notes, lab coats, calculators, and hostel essentials directly from fellow students.
             </p>
 
             {/* Prominent Search Bar */}
@@ -330,7 +330,7 @@ export default function HomePage({ onNavigate }) {
             <div className="step-card">
               <div className="step-number">1</div>
               <h4>Search by Academic Info</h4>
-              <p>Filter specifically by university (e.g. GTU, MU, DU), course, branch, semester, or subject name.</p>
+              <p>Filter specifically for GOVERNMENT POLITECNIC COLLAGE PALANPUR, course, branch, semester, or subject name.</p>
             </div>
 
             <div className="step-card">

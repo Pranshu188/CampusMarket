@@ -225,7 +225,7 @@ export default function SellPage({ onNavigate }) {
               <input 
                 type="text" 
                 required 
-                placeholder="e.g. GTU BBA Sem 3 Financial Accounting Textbook (Tulsian)"
+                placeholder="e.g. Higher Engineering Mathematics — B.S. Grewal"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="filter-input"
@@ -488,7 +488,7 @@ export default function SellPage({ onNavigate }) {
                 </label>
                 <input 
                   type="text" 
-                  placeholder="e.g. Gujarat Technological University (GTU)"
+                  placeholder="e.g. GOVERNMENT POLITECNIC COLLAGE PALANPUR"
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
                   className="filter-input"
@@ -611,7 +611,7 @@ export default function SellPage({ onNavigate }) {
                 <input 
                   type="text" 
                   required 
-                  placeholder="e.g. Navrangpura / LDCE Campus, Ahmedabad"
+                  placeholder="e.g. Palanpur Campus / Main Gate, Palanpur"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="filter-input"

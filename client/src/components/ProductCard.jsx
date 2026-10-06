@@ -33,10 +33,11 @@ export default function ProductCard({ product, onNavigate, onWishlistChange }) {
   if (product.college) {
     // Shorten common university names
     const shortCol = product.college
-      .replace('Gujarat Technological University', 'GTU')
-      .replace('Mumbai University', 'MU')
-      .replace('Delhi University', 'DU');
-    academicParts.push(shortCol.length > 18 ? shortCol.substring(0, 18) + '...' : shortCol);
+      .replace('GOVERNMENT POLITECNIC COLLAGE PALANPUR', 'GPC Palanpur')
+      .replace('Gujarat Technological University', 'GPC Palanpur')
+      .replace('Mumbai University', 'GPC Palanpur')
+      .replace('Delhi University', 'GPC Palanpur');
+    academicParts.push(shortCol);
   }
   if (product.course) academicParts.push(product.course);
   if (product.semester) academicParts.push(`Sem ${product.semester}`);

@@ -45,9 +45,14 @@ router.get('/', optionalAuth, (req, res) => {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const requests = db.prepare(`
-      SELECT r.*, u.name as requester_name, u.avatar as requester_avatar, u.college as requester_college, u.email as requester_email
+      SELECT 
+        r.*,
+        COALESCE(u.name, 'Campus Student') as requester_name,
+        COALESCE(u.avatar, 'https://api.dicebear.com/7.x/initials/svg?seed=Student&backgroundColor=0f766e') as requester_avatar,
+        COALESCE(u.college, 'GOVERNMENT POLITECNIC COLLAGE PALANPUR') as requester_college,
+        COALESCE(u.email, 'student@gpcpalanpur.ac.in') as requester_email
       FROM requests r
-      JOIN users u ON r.user_id = u.id
+      LEFT JOIN users u ON r.user_id = u.id
       ${whereClause}
       ORDER BY r.created_at DESC
     `).all(...params);

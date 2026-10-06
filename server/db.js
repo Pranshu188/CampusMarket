@@ -306,6 +306,10 @@ function initDatabase() {
       db.prepare("UPDATE users SET password_hash = ?, role = 'admin', name = 'Shreya Rajgor', college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', verification_status = 'verified', status = 'active' WHERE id = ?").run(adminPasswordHash, adminId);
     }
 
+    // Ensure all products and requests are assigned to current admin
+    db.prepare("UPDATE products SET seller_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', status = 'active', availability = 'available'").run(adminId);
+    db.prepare("UPDATE requests SET user_id = ?, college = 'GOVERNMENT POLITECNIC COLLAGE PALANPUR', status = 'open'").run(adminId);
+
     // Purge legacy demo user accounts
     db.pragma('foreign_keys = OFF');
     db.prepare('DELETE FROM orders').run();

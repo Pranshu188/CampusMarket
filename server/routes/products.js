@@ -153,18 +153,18 @@ router.get('/', optionalAuth, (req, res) => {
     const offset = (pageNum - 1) * pageLimit;
 
     // Total count query
-    const countSql = `SELECT COUNT(*) as total FROM products p ${whereClause}`;
+    const countSql = `SELECT COUNT(*) as total FROM products p LEFT JOIN users u ON p.seller_id = u.id ${whereClause}`;
     const totalCount = db.prepare(countSql).get(...params).total;
 
     // Fetch products
     const querySql = `
       SELECT 
         p.*,
-        u.name as seller_name,
-        u.avatar as seller_avatar,
+        COALESCE(u.name, 'Campus Seller') as seller_name,
+        COALESCE(u.avatar, 'https://api.dicebear.com/7.x/initials/svg?seed=Admin&backgroundColor=0f766e') as seller_avatar,
         (SELECT image_url FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as primary_image
       FROM products p
-      JOIN users u ON p.seller_id = u.id
+      LEFT JOIN users u ON p.seller_id = u.id
       ${whereClause}
       ${orderBy}
       LIMIT ? OFFSET ?
@@ -208,14 +208,14 @@ router.get('/:id', optionalAuth, (req, res) => {
     const product = db.prepare(`
       SELECT 
         p.*,
-        u.name as seller_name,
-        u.email as seller_email,
-        u.phone as seller_phone,
-        u.avatar as seller_avatar,
-        u.college as seller_college,
-        u.created_at as seller_joined_at
+        COALESCE(u.name, 'Campus Seller') as seller_name,
+        COALESCE(u.email, 'shreyarajgor5@gmail.com') as seller_email,
+        COALESCE(u.phone, '+91 98765 43210') as seller_phone,
+        COALESCE(u.avatar, 'https://api.dicebear.com/7.x/initials/svg?seed=Admin&backgroundColor=0f766e') as seller_avatar,
+        COALESCE(u.college, 'GOVERNMENT POLITECNIC COLLAGE PALANPUR') as seller_college,
+        COALESCE(u.created_at, p.created_at) as seller_joined_at
       FROM products p
-      JOIN users u ON p.seller_id = u.id
+      LEFT JOIN users u ON p.seller_id = u.id
       WHERE p.id = ?
     `).get(id);
 
